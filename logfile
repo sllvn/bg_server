@@ -1,0 +1,8 @@
+2022-12-04 23:14:58.340 +03 [6627] LOG:  starting PostgreSQL 15.0 on aarch64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.30), 64-bit
+2022-12-04 23:14:58.343 +03 [6627] LOG:  listening on IPv6 address "::1", port 5432
+2022-12-04 23:14:58.343 +03 [6627] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2022-12-04 23:14:58.343 +03 [6627] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2022-12-04 23:14:58.350 +03 [6630] LOG:  database system was shut down at 2022-11-18 01:05:56 +03
+2022-12-04 23:14:58.354 +03 [6627] LOG:  database system is ready to accept connections
+2022-12-04 23:19:58.343 +03 [6628] LOG:  checkpoint starting: time
+2022-12-04 23:21:29.819 +03 [6628] LOG:  checkpoint complete: wrote 906 buffers (5.5%); 0 WAL file(s) added, 1 removed, 0 recycled; write=91.454 s, sync=0.007 s, total=91.476 s; sync files=251, longest=0.001 s, average=0.001 s; distance=4069 kB, estimate=4069 kB

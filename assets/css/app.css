@@ -1,0 +1,11 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* This file is for your main application CSS */
+
+.dark { fill: #444; }
+.light { fill: #f6f6f6; }
+
+g.white circle { fill: #fff; stroke: #111; }
+g.black circle { fill: #111; stroke: #999; }
