@@ -17,7 +17,7 @@ defmodule BgServerWeb.Router do
   scope "/", BgServerWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", Board
   end
 
   # Other scopes may use custom stacks.

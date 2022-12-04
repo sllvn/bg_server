@@ -1,0 +1,53 @@
+<svg class="w-full h-full bg-slate-100" viewBox="0 0 1250 800">
+	<rect x="0" y="0" width="100%" height="100%" fill="#aaa"></rect>
+	<rect x="600" y="0" width="50" height="100%" fill="#888"></rect>
+	<g>
+		<g>
+			<polygon class="light" points="0,0   50,325  100,0"></polygon>
+			<polygon class="dark" points="100,0 150,325 200,0"></polygon>
+			<polygon class="light" points="200,0 250,325 300,0"></polygon>
+			<polygon class="dark" points="300,0 350,325 400,0"></polygon>
+			<polygon class="light" points="400,0 450,325 500,0"></polygon>
+			<polygon class="dark" points="500,0 550,325 600,0"></polygon>
+		</g>
+		<g>
+			<polygon class="light" points="650,0  700,325  750,0"></polygon>
+			<polygon class="dark" points="750,0  800,325  850,0"></polygon>
+			<polygon class="light" points="850,0  900,325  950,0"></polygon>
+			<polygon class="dark" points="950,0  1000,325 1050,0"></polygon>
+			<polygon class="light" points="1050,0 1100,325 1150,0"></polygon>
+			<polygon class="dark" points="1150,0 1200,325 1250,0"></polygon>
+		</g>
+		<g>
+			<polygon class="light" points="650,800  700,475  750,800"></polygon>
+			<polygon class="dark" points="750,800  800,475  850,800"></polygon>
+			<polygon class="light" points="850,800  900,475  950,800"></polygon>
+			<polygon class="dark" points="950,800  1000,475 1050,800"></polygon>
+			<polygon class="light" points="1050,800 1100,475 1150,800"></polygon>
+			<polygon class="dark" points="1150,800 1200,475 1250,800"></polygon>
+		</g>
+		<g>
+			<polygon class="light" points="0,800   50,475  100,800"></polygon>
+			<polygon class="dark" points="100,800 150,475 200,800"></polygon>
+			<polygon class="light" points="200,800 250,475 300,800"></polygon>
+			<polygon class="dark" points="300,800 350,475 400,800"></polygon>
+			<polygon class="light" points="400,800 450,475 500,800"></polygon>
+			<polygon class="dark" points="500,800 550,475 600,800"></polygon>
+		</g>
+	</g>
+	<g>
+		<%= for color <- [:white, :black] do %>
+			<g class={color}>
+				<%= for position <- 1..24 do %>
+					<%= for index <- 0..pieces_at_position(@positioned_pieces, position, color) do %>
+						<circle
+							cx={cx_for_position(position)}
+							cy={cy_for_position(position, index, @positioned_pieces, color)}
+							r="35"
+						></circle>
+					<% end %>
+				<% end %>
+			</g>
+		<% end %>
+	</g>
+</svg>
