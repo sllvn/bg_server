@@ -36,32 +36,26 @@
     </g>
   </g>
   <g>
-    <%= for color <- [:white, :black] do %>
-      <g class={color}>
-        <%= for position <- 1..24 do %>
-          <%= for index <- 0..pieces_at_position(@positioned_pieces, position, color) do %>
-						<circle
-							cx={cx_for_position(position)}
-							cy={cy_for_position(position, index, @positioned_pieces)}
-							r="35"
-							class={classes_for_piece(index, position, color, @positioned_pieces, @active_position)}
-							phx-click="set_active"
-							phx-value-position={position}
-						></circle>
-          <% end %>
-        <% end %>
-      </g>
-    <% end %>
-		<g class="possible-moves">
-			<%= for possible_move <- possible_moves(@active_position, @dice_roll, @positioned_pieces) do %>
+		<g class={color} :for={color <- [:white, :black]}>
+			<%= for position <- 1..24, index <- 0..pieces_at_position(@positioned_pieces, position, color) do %>
 				<circle
-					cx={cx_for_position(possible_move)}
-					cy={cy_for_position(possible_move, @positioned_pieces)}
+					cx={cx_for_position(position)}
+					cy={cy_for_position(position, index, @positioned_pieces)}
 					r="35"
-					phx-click="move_piece"
-					phx-value-possible-move={possible_move}
+					class={classes_for_piece(index, position, color, @positioned_pieces, @active_position)}
+					phx-click="set_active"
+					phx-value-position={position}
 				></circle>
 			<% end %>
+		</g>
+		<g class="possible-moves">
+			<circle :for={possible_move <- possible_moves(@active_position, @dice_roll, @positioned_pieces)}
+				cx={cx_for_position(possible_move)}
+				cy={cy_for_position(possible_move, @positioned_pieces)}
+				r="35"
+				phx-click="move_piece"
+				phx-value-possible-move={possible_move}
+			></circle>
 		</g>
   </g>
 	<g>
