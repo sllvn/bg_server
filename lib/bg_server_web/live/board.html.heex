@@ -66,3 +66,13 @@
 		<text x="978" y="412" width="60" height="60" class="dice-value"><%= elem(@dice_roll, 1) %></text>
 	</g>
 </svg>
+
+<div class="flex">
+  <div class="grow">
+    <button type="button" phx-click="roll_dice" class="btn btn-gray mt-4">roll dice</button>
+    <button type="button" phx-click="roll_dice" class="btn btn-gray mt-4">undo move</button>
+  </div>
+  <div class="grow-0">
+    <button type="button" phx-click="reset_game" class="btn btn-gray mt-4">reset game</button>
+  </div>
+</div>
