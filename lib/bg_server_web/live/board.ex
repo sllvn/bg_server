@@ -13,6 +13,8 @@ defmodule BgServerWeb.Board do
   }
 
   def mount(_params, _session, socket) do
+    BgServer.create_game()
+
     if connected?(socket), do: BgServer.subscribe()
     # pieces = %{ white: [1, 1, 1, 1, 1], black: [24, 24, 24, 24, 24]}
     positioned_pieces = @initial_board_setup
@@ -52,7 +54,11 @@ defmodule BgServerWeb.Board do
     {:noreply, socket}
   end
 
-  def handle_event("undo_move_piece", _value, _socket), do: :not_implemented
+  def handle_event("undo_move_piece", _value, socket) do
+    BgServer.undo_move_piece()
+    # :not_implemented
+    {:noreply, socket}
+  end
 
   def handle_event("reset_game", _value, socket) do
     BgServer.reset_game()
