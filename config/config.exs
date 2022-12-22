@@ -7,9 +7,6 @@
 # General application configuration
 import Config
 
-config :bg_server,
-  ecto_repos: [BgServer.Repo]
-
 # Configures the endpoint
 config :bg_server, BgServerWeb.Endpoint,
   url: [host: "localhost"],

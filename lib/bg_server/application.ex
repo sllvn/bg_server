@@ -10,8 +10,6 @@ defmodule BgServer.Application do
     children = [
       # Start the Telemetry supervisor
       BgServerWeb.Telemetry,
-      # Start the Ecto repository
-      BgServer.Repo,
       # Start the PubSub system
       {Phoenix.PubSub, name: BgServer.PubSub},
       # Start Finch

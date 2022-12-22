@@ -6,3 +6,21 @@
 2022-12-04 23:14:58.354 +03 [6627] LOG:  database system is ready to accept connections
 2022-12-04 23:19:58.343 +03 [6628] LOG:  checkpoint starting: time
 2022-12-04 23:21:29.819 +03 [6628] LOG:  checkpoint complete: wrote 906 buffers (5.5%); 0 WAL file(s) added, 1 removed, 0 recycled; write=91.454 s, sync=0.007 s, total=91.476 s; sync files=251, longest=0.001 s, average=0.001 s; distance=4069 kB, estimate=4069 kB
+2022-12-12 08:27:47.555 +03 [54626] LOG:  starting PostgreSQL 15.0 on aarch64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.30), 64-bit
+2022-12-12 08:27:47.557 +03 [54626] LOG:  listening on IPv6 address "::1", port 5432
+2022-12-12 08:27:47.557 +03 [54626] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2022-12-12 08:27:47.557 +03 [54626] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2022-12-12 08:27:47.564 +03 [54629] LOG:  database system was interrupted; last known up at 2022-12-04 23:21:29 +03
+2022-12-12 08:27:47.662 +03 [54629] LOG:  database system was not properly shut down; automatic recovery in progress
+2022-12-12 08:27:47.665 +03 [54629] LOG:  redo starts at 0/18099A10
+2022-12-12 08:27:47.665 +03 [54629] LOG:  invalid record length at 0/18099AF8: wanted 24, got 0
+2022-12-12 08:27:47.665 +03 [54629] LOG:  redo done at 0/18099AC0 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2022-12-12 08:27:47.666 +03 [54627] LOG:  checkpoint starting: end-of-recovery immediate wait
+2022-12-12 08:27:47.668 +03 [54627] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.002 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB
+2022-12-12 08:27:47.669 +03 [54626] LOG:  database system is ready to accept connections
+2022-12-16 08:42:13.227 +03 [54626] LOG:  received smart shutdown request
+2022-12-16 08:42:13.237 +03 [54626] LOG:  background worker "logical replication launcher" (PID 54632) exited with exit code 1
+2022-12-16 08:42:13.238 +03 [54627] LOG:  shutting down
+2022-12-16 08:42:13.242 +03 [54627] LOG:  checkpoint starting: shutdown immediate
+2022-12-16 08:42:13.262 +03 [54627] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.014 s, sync=0.002 s, total=0.024 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB
+2022-12-16 08:42:13.272 +03 [54626] LOG:  database system is shut down
