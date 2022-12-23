@@ -37,21 +37,30 @@
   </g>
   <g>
 		<g class={color} :for={color <- [:white, :black]}>
-			<%= for position <- 1..24, index <- 0..pieces_at_position(@positioned_pieces, position, color) do %>
-				<circle
-					cx={cx_for_position(position)}
-					cy={cy_for_position(position, index, @positioned_pieces)}
-					r="35"
-					class={classes_for_piece(index, position, color, @positioned_pieces, @active_position)}
-					phx-click="set_active"
-					phx-value-position={position}
-				></circle>
+			<%= for position <- 1..24, index <- 0..pieces_at_position(@board, position, color) do %>
+        <%= if color == @turn do %>
+          <circle
+            cx={cx_for_position(position)}
+            cy={cy_for_position(position, index)}
+            r="35"
+            class={classes_for_piece(index, position, color, @board, @active_position)}
+            phx-click="set_active"
+            phx-value-position={position}
+          ></circle>
+        <% else %>
+          <circle
+            cx={cx_for_position(position)}
+            cy={cy_for_position(position, index)}
+            r="35"
+            class={classes_for_piece(index, position, color, @board, @active_position)}
+          ></circle>
+        <% end %>
 			<% end %>
 		</g>
 		<g class="possible-moves">
-			<circle :for={possible_move <- possible_moves(@active_position, @dice_roll, @positioned_pieces)}
+			<circle :for={possible_move <- possible_moves(@active_position, @dice_roll, @board)}
 				cx={cx_for_position(possible_move)}
-				cy={cy_for_position(possible_move, @positioned_pieces)}
+				cy={cy_for_position(possible_move, @board, @turn)}
 				r="35"
 				phx-click="move_piece"
 				phx-value-possible-move={possible_move}
@@ -70,7 +79,6 @@
 <div class="flex">
   <div class="grow">
     <button type="button" phx-click="roll_dice" class="btn btn-gray mt-4">roll dice</button>
-    <button type="button" phx-click="undo_move_piece" class="btn btn-gray mt-4">undo move</button>
   </div>
   <div class="grow-0">
     <button type="button" phx-click="reset_game" class="btn btn-gray mt-4">reset game</button>

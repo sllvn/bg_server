@@ -1,36 +1,18 @@
 defmodule BgServerWeb.Board do
   use BgServerWeb, :live_view
 
-  @initial_board_setup %{
-    1 => %{white: 2},
-    12 => %{white: 5},
-    17 => %{white: 3},
-    19 => %{white: 5},
-    6 => %{black: 5},
-    8 => %{black: 3},
-    13 => %{black: 5},
-    24 => %{black: 2}
-  }
-
   def mount(_params, _session, socket) do
-    BgServer.create_game()
+    game_state = BgServer.connect_to_game(:some_game_id)
 
     if connected?(socket), do: BgServer.subscribe()
-    # pieces = %{ white: [1, 1, 1, 1, 1], black: [24, 24, 24, 24, 24]}
-    positioned_pieces = @initial_board_setup
-
-    # the current session's player
-    active_player = :black
-    turn = :black
-    active_position = 8
-    dice_roll = {3, 6}
+    %{board: board, active_player: active_player, turn: turn, dice_roll: dice_roll} = game_state
 
     {:ok,
      assign(socket,
-       positioned_pieces: positioned_pieces,
+       board: board,
        active_player: active_player,
        turn: turn,
-       active_position: active_position,
+       active_position: nil,
        dice_roll: dice_roll,
        last_reset: nil
      )}
@@ -49,15 +31,9 @@ defmodule BgServerWeb.Board do
   end
 
   def handle_event("move_piece", %{"possible-move" => possible_move}, socket) do
-    possible_move = String.to_integer(possible_move)
-    BgServer.move_piece(possible_move, socket.assigns.positioned_pieces, socket.assigns.active_position)
-    {:noreply, socket}
-  end
-
-  def handle_event("undo_move_piece", _value, socket) do
-    BgServer.undo_move_piece()
-    # :not_implemented
-    {:noreply, socket}
+    possible_move = String.to_integer(possible_move) |> IO.inspect(label: "possible_move")
+    BgServer.move_piece(possible_move, socket.assigns.board, socket.assigns.active_position)
+    {:noreply, assign(socket, active_position: nil)}
   end
 
   def handle_event("reset_game", _value, socket) do
@@ -70,25 +46,14 @@ defmodule BgServerWeb.Board do
     {:noreply, socket}
   end
 
-  def handle_info({:game_reset}, socket) do
-    {:noreply,
-     assign(socket,
-       positioned_pieces: @initial_board_setup,
-       active_position: nil
-     )}
-  end
+  def handle_info({:new_game_state, new_game_state}, socket) do
+    %{board: board, active_player: active_player, turn: turn, dice_roll: dice_roll} = new_game_state
 
-  def handle_info({:dice_rolled, new_dice}, socket) do
-    IO.inspect({:dice_rolled, new_dice}, label: "dice rolled")
-    {:noreply, assign(socket, dice_roll: new_dice)}
-  end
-
-  def handle_info({:piece_moved, next_positioned_pieces}, socket) do
-    {:noreply,
-     assign(socket,
-       positioned_pieces: next_positioned_pieces,
-       active_position: nil
-     )}
+    {:noreply, assign(socket,
+      board: board,
+      turn: turn,
+      active_player: active_player,
+      dice_roll: dice_roll)}
   end
 
   defp cx_for_position(position) do
@@ -109,13 +74,13 @@ defmodule BgServerWeb.Board do
     base + bar_offset
   end
 
-  defp pieces_at_position(positioned_pieces, position, color) do
-    positioned_pieces
+  defp pieces_at_position(board, position, color) do
+    board
     |> Map.get(position, %{})
     |> Map.get(color, 0)
   end
 
-  defp cy_for_position(position, index, _positioned_pieces) do
+  defp cy_for_position(position, index) do
     if position <= 12 do
       800 - ((index - 1) * 70 + 35)
     else
@@ -123,13 +88,14 @@ defmodule BgServerWeb.Board do
     end
   end
 
-  defp cy_for_position(position, positioned_pieces) do
-    # used for possible moves
-    cy_for_position(position, Map.get(positioned_pieces, position, 1), positioned_pieces)
+  defp cy_for_position(position, board, turn) do
+    # used for candidate moves
+    current_pieces = board |> Map.get(position, %{}) |> Map.get(turn, 0)
+    cy_for_position(position, current_pieces+1)
   end
 
-  defp classes_for_piece(index, position, color, positioned_pieces, active_position) do
-    num_pieces = pieces_at_position(positioned_pieces, position, color)
+  defp classes_for_piece(index, position, color, board, active_position) do
+    num_pieces = pieces_at_position(board, position, color)
 
     cond do
       active_position == position and index == num_pieces -> "final active"
@@ -138,12 +104,22 @@ defmodule BgServerWeb.Board do
     end
   end
 
-  defp possible_moves(nil, _dice_roll, _positioned_pieces), do: []
+  defp possible_moves(nil, _dice_roll, _board), do: []
 
-  defp possible_moves(position, dice_roll, _positioned_pieces) do
-    IO.inspect([position, dice_roll], label: "possible_moves")
-    [position - elem(dice_roll, 0), position - elem(dice_roll, 1)]
+  defp possible_moves(position, dice_roll, board) do
+    dice_roll
+    |> Tuple.to_list()
+    |> Enum.map(fn roll -> position - roll end)
+    |> Enum.filter(fn c -> is_valid_move(c, board, :black) end)
   end
 
-  defp is_valid_move(), do: :not_implemented
+  defp is_valid_move(candidate_position, board, current_player) do
+    opponent = if current_player == :black, do: :white, else: :black
+    opponent_pieces_at_position =
+      board
+      |> Map.get(candidate_position, %{})
+      |> Map.get(opponent, 0)
+
+    opponent_pieces_at_position == 0
+  end
 end

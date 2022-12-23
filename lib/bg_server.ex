@@ -5,36 +5,37 @@ defmodule BgServer do
     Phoenix.PubSub.subscribe(@pubsub, topic("test1234"))
   end
 
-  def create_game do
+  def connect_to_game(_game_id) do
     GameState.start_link()
+
+    {:ok, state} = GameState.get_game_state()
+    state
   end
 
   def roll_dice do
     new_dice = {Enum.random(1..6), Enum.random(1..6)}
-    Phoenix.PubSub.broadcast(@pubsub, topic("test1234"), {:dice_rolled, new_dice})
+    {:ok, new_game_state} = GameState.set_dice_roll(new_dice)
+    Phoenix.PubSub.broadcast(@pubsub, topic("test1234"), {:new_game_state, new_game_state})
   end
 
   def reset_game do
-    GameState.put(:my_value)
-    # Phoenix.PubSub.broadcast(@pubsub, topic("test1234"), {:game_reset})
+    {:ok, new_game_state} = GameState.reset_game()
+    Phoenix.PubSub.broadcast(@pubsub, topic("test1234"), {:new_game_state, new_game_state})
   end
 
-  def move_piece(possible_move, positioned_pieces, active_position) do
-    IO.inspect(possible_move, label: "move_piece")
+  def move_piece(possible_move, board, active_position) do
+    IO.inspect({possible_move, board, active_position}, label: "move_piece")
 
     # move a piece from active_position to possible_move
     # track in pending_move
 
-    next_positioned_pieces =
-      positioned_pieces
+    next_board =
+      board
       |> Map.update(possible_move, %{black: 1}, fn existing -> %{black: existing.black + 1} end)
       |> Map.update(active_position, %{}, fn existing -> %{black: existing.black - 1} end)
 
-    Phoenix.PubSub.broadcast(@pubsub, topic("test1234"), {:piece_moved, next_positioned_pieces})
-  end
-
-  def undo_move_piece() do
-    {:ok, _result} = GameState.pop()
+    {:ok, new_game_state} = GameState.set_board(next_board)
+    Phoenix.PubSub.broadcast(@pubsub, topic("test1234"), {:new_game_state, new_game_state})
   end
 
   defp topic(game_id), do: "game:#{game_id}"
