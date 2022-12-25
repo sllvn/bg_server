@@ -3,37 +3,28 @@ defmodule BgServerWeb.Board do
 
   def mount(_params, _session, socket) do
     game = BgServer.connect_to_game(:some_game_id)
-
     if connected?(socket), do: BgServer.subscribe()
-    %{board: board, active_player: active_player, turn: turn, dice_roll: dice_roll} = game
+
+    %{board: board, active_player: active_player, turn: turn} = game
 
     {:ok,
      assign(socket,
        board: board,
        active_player: active_player,
-       turn: turn,
-       active_position: nil,
-       dice_roll: dice_roll,
-       last_reset: nil
+       turn: turn
      )}
   end
 
   def handle_event("set_pending_piece", value, socket) do
     click_position = String.to_integer(value["position"])
-
-    active_position =
-      cond do
-        click_position == socket.assigns[:active_position] -> nil
-        true -> click_position
-      end
-
-    {:noreply, assign(socket, active_position: active_position)}
+    BgServer.set_pending_piece(click_position)
+    {:noreply, socket}
   end
 
   def handle_event("move_pending_piece", %{"possible-move" => possible_move}, socket) do
-    possible_move = String.to_integer(possible_move) |> IO.inspect(label: "possible_move")
-    BgServer.move_piece(possible_move, socket.assigns.board, socket.assigns.active_position)
-    {:noreply, assign(socket, active_position: nil)}
+    possible_move = String.to_integer(possible_move)
+    BgServer.move_piece(possible_move)
+    {:noreply, socket}
   end
 
   def handle_event("reset_game", _value, socket) do
@@ -47,15 +38,13 @@ defmodule BgServerWeb.Board do
   end
 
   def handle_info({:new_game_state, new_game_state}, socket) do
-    %{board: board, active_player: active_player, turn: turn, dice_roll: dice_roll} =
-      new_game_state
+    %{board: board, active_player: active_player, turn: turn} = new_game_state
 
     {:noreply,
      assign(socket,
        board: board,
        turn: turn,
-       active_player: active_player,
-       dice_roll: dice_roll
+       active_player: active_player
      )}
   end
 
@@ -91,9 +80,9 @@ defmodule BgServerWeb.Board do
     end
   end
 
-  defp cy_for_position(position, board, turn) do
+  defp cy_for_position(position, board, player) do
     # used for candidate moves
-    current_pieces = board |> Map.get(position, %{}) |> Map.get(turn, 0)
+    current_pieces = board |> Map.get(position, %{}) |> Map.get(player, 0)
     cy_for_position(position, current_pieces + 1)
   end
 

@@ -2,7 +2,7 @@
   class="w-full h-full bg-slate-100"
   viewBox="0 0 1250 800"
   data-active-player={@active_player}
-  data-turn={@turn}
+  data-turn={@turn.player}
 >
   <rect x="0" y="0" width="100%" height="100%" fill="#aaa"></rect>
   <rect x="600" y="0" width="50" height="100%" fill="#888"></rect>
@@ -43,12 +43,12 @@
   <g>
     <g :for={color <- [:white, :black]} class={color}>
       <%= for position <- 1..24, index <- 0..pieces_at_position(@board, position, color) do %>
-        <%= if color == @turn do %>
+        <%= if color == @turn.player do %>
           <circle
             cx={cx_for_position(position)}
             cy={cy_for_position(position, index)}
             r="35"
-            class={classes_for_piece(index, position, color, @board, @active_position)}
+            class={classes_for_piece(index, position, color, @board, @turn.pending_piece)}
             phx-click="set_pending_piece"
             phx-value-position={position}
           >
@@ -58,7 +58,7 @@
             cx={cx_for_position(position)}
             cy={cy_for_position(position, index)}
             r="35"
-            class={classes_for_piece(index, position, color, @board, @active_position)}
+            class={classes_for_piece(index, position, color, @board, @turn.pending_piece)}
           >
           </circle>
         <% end %>
@@ -66,9 +66,9 @@
     </g>
     <g class="possible-moves">
       <circle
-        :for={possible_move <- possible_moves(@active_position, @dice_roll, @board)}
+        :for={possible_move <- possible_moves(@turn.pending_piece, @turn.dice_roll, @board)}
         cx={cx_for_position(possible_move)}
-        cy={cy_for_position(possible_move, @board, @turn)}
+        cy={cy_for_position(possible_move, @board, @turn.player)}
         r="35"
         phx-click="move_pending_piece"
         phx-value-possible-move={possible_move}
@@ -81,10 +81,10 @@
     <rect x="960" y="370" width="60" height="60" fill="#fff" stroke="0"></rect>
 
     <text x="898" y="412" width="60" height="60" class="dice-value">
-      <%= elem(@dice_roll, 0) %>
+      <%= elem(@turn.dice_roll, 0) %>
     </text>
     <text x="978" y="412" width="60" height="60" class="dice-value">
-      <%= elem(@dice_roll, 1) %>
+      <%= elem(@turn.dice_roll, 1) %>
     </text>
   </g>
 </svg>
