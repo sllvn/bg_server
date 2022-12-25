@@ -16,6 +16,7 @@
 	--white-possible: #FEF08A;
 	--black-active: #14B8A6;
 	--black-possible: #FEF08A;
+	--black-pending: #701A75;
 }
 
 g.white circle { fill: #fff; stroke: #111; }
@@ -25,6 +26,7 @@ g.black circle { fill: #111; stroke: #999; }
 	[data-active-player="black"][data-turn="black"] g.black circle.active { fill: var(--black-active); }
 	[data-active-player="black"][data-turn="black"] g.black circle.final:hover { fill: var(--black-active); }
 g.possible-moves circle { fill: var(--black-possible); cursor: pointer; }
+g.pending-moves circle { fill: var(--black-pending); cursor: pointer; }
 
 [data-active-player="white"][data-turn="white"] g.white .final,
 [data-active-player="black"][data-turn="black"] g.black .final { cursor: pointer; }

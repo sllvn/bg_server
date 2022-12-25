@@ -42,13 +42,13 @@
   </g>
   <g>
     <g :for={color <- [:white, :black]} class={color}>
-      <%= for position <- 1..24, index <- 0..pieces_at_position(@board, position, color) do %>
+      <%= for position <- 1..24, index <- 0..pieces_at_position(@board, @turn, position, color) do %>
         <%= if color == @turn.player do %>
           <circle
             cx={cx_for_position(position)}
             cy={cy_for_position(position, index)}
             r="35"
-            class={classes_for_piece(index, position, color, @board, @turn.pending_piece)}
+            class={classes_for_piece(index, position, color, @board, @turn)}
             phx-click="set_pending_piece"
             phx-value-position={position}
           >
@@ -58,7 +58,7 @@
             cx={cx_for_position(position)}
             cy={cy_for_position(position, index)}
             r="35"
-            class={classes_for_piece(index, position, color, @board, @turn.pending_piece)}
+            class={classes_for_piece(index, position, color, @board, @turn)}
           >
           </circle>
         <% end %>
@@ -72,6 +72,17 @@
         r="35"
         phx-click="move_pending_piece"
         phx-value-possible-move={possible_move}
+      >
+      </circle>
+    </g>
+    <g class="pending-moves">
+      <circle
+        :for={pending_move <- pending_moves(@board, @turn)}
+        cx={cx_for_position(pending_move)}
+        cy={cy_for_position(pending_move, @board, @turn.player)}
+        r="35"
+        phx-click="undo_pending_move"
+        phx-value-possible-move={pending_move}
       >
       </circle>
     </g>
@@ -92,8 +103,16 @@
 <div class="flex">
   <div class="grow">
     <button type="button" phx-click="roll_dice" class="btn btn-gray mt-4">roll dice</button>
+    <button type="button" phx-click="commit_move" class="btn btn-gray mt-4">end move</button>
   </div>
   <div class="grow-0">
     <button type="button" phx-click="reset_game" class="btn btn-gray mt-4">reset game</button>
   </div>
+</div>
+
+<div>
+  <h4>remaining</h4>
+  <ul>
+    <li :for={remaining_action <- remaining_actions(@turn.dice_roll, @turn.pending_moves)}><%= remaining_action %></li>
+  </ul>
 </div>

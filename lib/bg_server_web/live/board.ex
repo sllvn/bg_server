@@ -48,6 +48,8 @@ defmodule BgServerWeb.Board do
      )}
   end
 
+  # view helpers
+
   defp cx_for_position(position) do
     base =
       if position <= 12 do
@@ -56,20 +58,9 @@ defmodule BgServerWeb.Board do
         (25 - position - 1) * 100 + 50
       end
 
-    bar_offset =
-      if position <= 6 or position >= 19 do
-        0
-      else
-        50
-      end
+    bar_offset = if position <= 6 or position >= 19, do: 0, else: 50
 
     base + bar_offset
-  end
-
-  defp pieces_at_position(board, position, color) do
-    board
-    |> Map.get(position, %{})
-    |> Map.get(color, 0)
   end
 
   defp cy_for_position(position, index) do
@@ -86,14 +77,31 @@ defmodule BgServerWeb.Board do
     cy_for_position(position, current_pieces + 1)
   end
 
-  defp classes_for_piece(index, position, color, board, active_position) do
-    num_pieces = pieces_at_position(board, position, color)
+  defp classes_for_piece(index, position, color, board, turn = %Turn{}) do
+    num_pieces = pieces_at_position(board, turn, position, color)
 
     cond do
-      active_position == position and index == num_pieces -> "final active"
+      turn.pending_piece == position and index == num_pieces -> "final active"
       index == num_pieces -> "final"
       true -> nil
     end
+  end
+
+  # business logic
+
+  defp pieces_at_position(board, turn = %Turn{}, position, color) do
+    moved_from_position =
+      turn.pending_moves # list of tuples {amount, original_position}
+      |> Enum.filter(fn move -> elem(move, 1) == position end)
+      |> Enum.count
+
+
+    board_at_position =
+      board
+      |> Map.get(position, %{})
+      |> Map.get(color, 0)
+
+    board_at_position - moved_from_position
   end
 
   defp possible_moves(_board, %{pending_piece: nil}), do: []
@@ -114,5 +122,22 @@ defmodule BgServerWeb.Board do
       |> Map.get(opponent, 0)
 
     opponent_pieces_at_position == 0
+  end
+
+  defp remaining_actions(dice_roll, pending_moves) do
+    {a,b} = dice_roll
+
+    if a == b, do: [a,a,a,a], else: [a,b]
+    |> Enum.filter(fn move ->
+      pending_moves
+      |> Enum.map(&elem(&1, 0))
+      |> Enum.member?(move)
+      |> then(fn is_consumed -> !is_consumed end)
+    end)
+  end
+
+  defp pending_moves(_board, turn) do
+    turn.pending_moves
+    |> Enum.map(fn {amount, origin} -> origin - amount end)
   end
 end

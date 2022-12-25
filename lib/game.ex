@@ -1,3 +1,7 @@
+defmodule Turn do
+  defstruct player: :black, pending_piece: nil, dice_roll: {nil,nil}, pending_moves: []
+end
+
 defmodule Game do
   use GenServer
 
@@ -7,11 +11,11 @@ defmodule Game do
       6 => %{black: 5}, 8 => %{black: 3}, 13 => %{black: 5}, 24 => %{black: 2}
     },
     active_player: :black,
-    turn: %{
+    turn: %Turn{
       player: :black,
       pending_piece: nil,
       dice_roll: {2,6},
-      pending_moves: [], # a list of {original,ending} or {dice_value,original,ending} tuples
+      pending_moves: [{2,6}], # a list of {dice_value,original} tuples
     }
   }
 
@@ -33,7 +37,7 @@ defmodule Game do
   end
 
   def move_piece(possible_move) do
-    # board, active_position
+    # TODO: update to just change turn state, then if turn is complete, save changes to board and reset turn
     {:ok, %{board: board, turn: turn}} = get_game_state()
 
     next_board =
