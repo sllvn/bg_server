@@ -96,13 +96,13 @@ defmodule BgServerWeb.Board do
     end
   end
 
-  defp possible_moves(nil, _dice_roll, _board), do: []
+  defp possible_moves(_board, %{pending_piece: nil}), do: []
 
-  defp possible_moves(position, dice_roll, board) do
-    dice_roll
+  defp possible_moves(board, turn) do
+    turn.dice_roll
     |> Tuple.to_list()
-    |> Enum.map(fn roll -> position - roll end)
-    |> Enum.filter(fn c -> is_valid_move(c, board, :black) end)
+    |> Enum.map(fn roll -> turn.pending_piece - roll end)
+    |> Enum.filter(fn c -> is_valid_move(c, board, turn.player) end)
   end
 
   defp is_valid_move(candidate_position, board, current_player) do
