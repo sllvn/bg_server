@@ -1,16 +1,17 @@
 defmodule BgServerWeb.Board do
   use BgServerWeb, :live_view
+  alias BgServer.Turn
 
   def mount(_params, _session, socket) do
     game = BgServer.connect_to_game(:some_game_id)
     if connected?(socket), do: BgServer.subscribe()
 
-    %{board: board, active_player: active_player, turn: turn} = game
+    %{board: board, current_player: current_player, turn: turn} = game
 
     {:ok,
      assign(socket,
        board: board,
-       active_player: active_player,
+       current_player: current_player,
        turn: turn
      )}
   end
@@ -37,14 +38,19 @@ defmodule BgServerWeb.Board do
     {:noreply, socket}
   end
 
+  def handle_event("undo_pending_move", _value, socket) do
+    BgServer.undo_pending_move()
+    {:noreply, socket}
+  end
+
   def handle_info({:new_game_state, new_game_state}, socket) do
-    %{board: board, active_player: active_player, turn: turn} = new_game_state
+    %{board: board, current_player: current_player, turn: turn} = new_game_state
 
     {:noreply,
      assign(socket,
        board: board,
        turn: turn,
-       active_player: active_player
+       current_player: current_player
      )}
   end
 
@@ -134,6 +140,11 @@ defmodule BgServerWeb.Board do
       |> Enum.member?(move)
       |> then(fn is_consumed -> !is_consumed end)
     end)
+  end
+
+  defp is_move_complete() do
+    # TODO NEXT: if move is complete, allow clicking "end move", if move is not complete, add class to board and allow clicking on current_player's pieces
+    true
   end
 
   defp pending_moves(_board, turn) do

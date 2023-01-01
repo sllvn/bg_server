@@ -3,8 +3,9 @@
 @import "tailwindcss/utilities";
 
 .btn { @apply font-bold py-2 px-4 rounded; }
+	.btn:disabled { @apply disabled:opacity-50 cursor-not-allowed; }
 .btn-gray { @apply bg-gray-500 text-white; }
-.btn-gray:hover { @apply bg-gray-700; }
+.btn-gray:hover:not(:disabled) { @apply bg-gray-700; }
 
 /* This file is for your main application CSS */
 
@@ -20,16 +21,16 @@
 }
 
 g.white circle { fill: #fff; stroke: #111; }
-	[data-active-player="white"][data-turn="white"] g.white circle.active { fill: var(--white-active); }
-	[data-active-player="white"][data-turn="white"] g.white circle.final:hover { fill: var(--white-active); }
+	[data-current-player="white"][data-turn="white"] g.white circle.active { fill: var(--white-active); }
+	[data-current-player="white"][data-turn="white"] g.white circle.final:hover { fill: var(--white-active); }
 g.black circle { fill: #111; stroke: #999; }
-	[data-active-player="black"][data-turn="black"] g.black circle.active { fill: var(--black-active); }
-	[data-active-player="black"][data-turn="black"] g.black circle.final:hover { fill: var(--black-active); }
+	[data-current-player="black"][data-turn="black"] g.black circle.active { fill: var(--black-active); }
+	[data-current-player="black"][data-turn="black"] g.black circle.final:hover { fill: var(--black-active); }
 g.possible-moves circle { fill: var(--black-possible); cursor: pointer; }
 g.pending-moves circle { fill: var(--black-pending); cursor: pointer; }
 
-[data-active-player="white"][data-turn="white"] g.white .final,
-[data-active-player="black"][data-turn="black"] g.black .final { cursor: pointer; }
+[data-current-player="white"][data-turn="white"] g.white .final,
+[data-current-player="black"][data-turn="black"] g.black .final { cursor: pointer; }
 
 .dice-value {
 	font-size: 36px;

@@ -1,7 +1,7 @@
 <svg
   class="w-full h-full bg-slate-100"
   viewBox="0 0 1250 800"
-  data-active-player={@active_player}
+  data-current-player={@current_player}
   data-turn={@turn.player}
 >
   <rect x="0" y="0" width="100%" height="100%" fill="#aaa"></rect>
@@ -81,8 +81,6 @@
         cx={cx_for_position(pending_move)}
         cy={cy_for_position(pending_move, @board, @turn.player)}
         r="35"
-        phx-click="undo_pending_move"
-        phx-value-possible-move={pending_move}
       >
       </circle>
     </g>
@@ -100,19 +98,20 @@
   </g>
 </svg>
 
-<div class="flex">
+<div class="flex mt-4">
   <div class="grow">
-    <button type="button" phx-click="roll_dice" class="btn btn-gray mt-4">roll dice</button>
-    <button type="button" phx-click="commit_move" class="btn btn-gray mt-4">end move</button>
-  </div>
-  <div class="grow-0">
-    <button type="button" phx-click="reset_game" class="btn btn-gray mt-4">reset game</button>
+    <button type="button" phx-click="roll_dice" class="btn btn-gray">roll dice</button>
+    <div class="inline-block ml-4 mr-4">
+      <label class="mr-2 font-bold">remaining:</label>
+      <span class="mr-2" :for={remaining_action <- remaining_actions(@turn.dice_roll, @turn.pending_moves)}><%= remaining_action %></span>
+    </div>
+    <button type="button" phx-click="undo_pending_move" disabled={length(@turn.pending_moves) == 0} class="btn btn-gray">undo</button>
+    <button type="button" phx-click="commit_move" class="btn btn-gray">end move</button>
   </div>
 </div>
-
-<div>
-  <h4>remaining</h4>
-  <ul>
-    <li :for={remaining_action <- remaining_actions(@turn.dice_roll, @turn.pending_moves)}><%= remaining_action %></li>
-  </ul>
+<div class="flex mt-24">
+  <div class="grow"></div>
+  <div class="grow-0">
+    <button type="button" phx-click="reset_game" class="btn btn-gray">reset game</button>
+  </div>
 </div>

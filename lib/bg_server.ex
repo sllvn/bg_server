@@ -1,5 +1,6 @@
 defmodule BgServer do
   @pubsub BgServer.PubSub
+  alias BgServer.Game
 
   def subscribe do
     Phoenix.PubSub.subscribe(@pubsub, topic("my-game-id"))
@@ -29,6 +30,11 @@ defmodule BgServer do
 
   def set_pending_piece(position) do
     {:ok, new_game_state} = Game.set_pending_piece(position)
+    Phoenix.PubSub.broadcast(@pubsub, topic("my-game-id"), {:new_game_state, new_game_state})
+  end
+
+  def undo_pending_move() do
+    {:ok, new_game_state} = Game.undo_pending_move()
     Phoenix.PubSub.broadcast(@pubsub, topic("my-game-id"), {:new_game_state, new_game_state})
   end
 
