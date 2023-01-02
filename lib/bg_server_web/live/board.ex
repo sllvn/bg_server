@@ -83,10 +83,17 @@ defmodule BgServerWeb.Board do
   end
 
   defp cy_for_position(position, board, turn, :include_pending) do
-    current_pieces = board |> Map.get(position, %{}) |> Map.get(turn.player, 0) |> IO.inspect(label: "current_pieces")
+    current_pieces =
+      board
+      |> Map.get(position, %{})
+      |> Map.get(turn.player, 0)
+      |> IO.inspect(label: "current_pieces")
+
     pending_pieces =
       turn.pending_moves
-      |> Enum.filter(fn {dice_value, original_position} -> original_position - dice_value == position end)
+      |> Enum.filter(fn {dice_value, original_position} ->
+        original_position - dice_value == position
+      end)
       |> length
 
     cy_for_position(position, current_pieces + pending_pieces + 1)
@@ -94,6 +101,7 @@ defmodule BgServerWeb.Board do
 
   defp cy_for_position(position, board, turn, index) do
     {position, board, turn} |> IO.inspect(label: "cy_for_position")
+
     current_pieces =
       board
       |> Map.get(position, %{})
@@ -121,10 +129,11 @@ defmodule BgServerWeb.Board do
   defp can_roll_dice(dice_roll), do: elem(dice_roll, 0) == nil
 
   defp pieces_at_position(board, turn = %Turn{}, position, color) do
+    # list of tuples {amount, original_position}
     moved_from_position =
-      turn.pending_moves # list of tuples {amount, original_position}
+      turn.pending_moves
       |> Enum.filter(fn move -> elem(move, 1) == position end)
-      |> Enum.count
+      |> Enum.count()
 
     board_at_position =
       board
@@ -155,15 +164,10 @@ defmodule BgServerWeb.Board do
 
   defp remaining_actions(turn) do
     %{dice_roll: dice_roll, pending_moves: pending_moves} = turn
-    {a,b} = dice_roll
-
-    if a == b, do: [a,a,a,a], else: [a,b]
-    |> Enum.filter(fn move ->
-      pending_moves
-      |> Enum.map(&elem(&1, 0))
-      |> Enum.member?(move)
-      |> then(fn is_consumed -> !is_consumed end)
-    end)
+    {a, b} = dice_roll
+    all_moves = if a == b, do: [a, a, a, a], else: [a, b]
+    consumed_moves = Enum.map(pending_moves, &elem(&1, 0))
+    all_moves -- consumed_moves
   end
 
   defp is_move_complete(turn) do
