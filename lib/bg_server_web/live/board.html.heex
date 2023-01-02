@@ -64,23 +64,23 @@
         <% end %>
       <% end %>
     </g>
+    <g class="pending-moves">
+      <circle
+        :for={{index, pending_move} <- indexify(pending_moves(@board, @turn))}
+        cx={cx_for_position(pending_move)}
+        cy={cy_for_position(pending_move, @board, @turn, index)}
+        r="35"
+      >
+      </circle>
+    </g>
     <g class="possible-moves">
       <circle
         :for={possible_move <- possible_moves(@board, @turn)}
         cx={cx_for_position(possible_move)}
-        cy={cy_for_position(possible_move, @board, @turn.player)}
+        cy={cy_for_position(possible_move, @board, @turn, :include_pending)}
         r="35"
         phx-click="move_pending_piece"
         phx-value-possible-move={possible_move}
-      >
-      </circle>
-    </g>
-    <g class="pending-moves">
-      <circle
-        :for={pending_move <- pending_moves(@board, @turn)}
-        cx={cx_for_position(pending_move)}
-        cy={cy_for_position(pending_move, @board, @turn.player)}
-        r="35"
       >
       </circle>
     </g>
@@ -98,15 +98,26 @@
   </g>
 </svg>
 
-<div class="flex mt-4">
+<div>
+  <%= @turn.player %>'s turn
+</div>
+<div class="flex mt-4 action-buttons">
   <div class="grow">
-    <button type="button" phx-click="roll_dice" class="btn btn-gray">roll dice</button>
+    <button type="button" phx-click="roll_dice" disabled={!can_roll_dice(@turn.dice_roll)}>
+      roll dice
+    </button>
     <div class="inline-block ml-4 mr-4">
       <label class="mr-2 font-bold">remaining:</label>
-      <span class="mr-2" :for={remaining_action <- remaining_actions(@turn.dice_roll, @turn.pending_moves)}><%= remaining_action %></span>
+      <span :for={remaining_action <- remaining_actions(@turn)} class="mr-2">
+        <%= remaining_action %>
+      </span>
     </div>
-    <button type="button" phx-click="undo_pending_move" disabled={length(@turn.pending_moves) == 0} class="btn btn-gray">undo</button>
-    <button type="button" phx-click="commit_move" class="btn btn-gray">end move</button>
+    <button type="button" phx-click="undo_pending_move" disabled={length(@turn.pending_moves) < 1}>
+      undo
+    </button>
+    <button type="button" phx-click="commit_move" disabled={!is_move_complete(@turn)}>
+      end move
+    </button>
   </div>
 </div>
 <div class="flex mt-24">

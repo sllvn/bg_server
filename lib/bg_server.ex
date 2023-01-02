@@ -38,5 +38,10 @@ defmodule BgServer do
     Phoenix.PubSub.broadcast(@pubsub, topic("my-game-id"), {:new_game_state, new_game_state})
   end
 
+  def commit_move() do
+    {:ok, new_game_state} = Game.commit_move()
+    Phoenix.PubSub.broadcast(@pubsub, topic("my-game-id"), {:new_game_state, new_game_state})
+  end
+
   defp topic(game_id), do: "game:#{game_id}"
 end

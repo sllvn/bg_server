@@ -16,8 +16,8 @@ defmodule BgServerWeb.Board do
      )}
   end
 
-  def handle_event("set_pending_piece", value, socket) do
-    click_position = String.to_integer(value["position"])
+  def handle_event("set_pending_piece", %{"position" => position}, socket) do
+    click_position = String.to_integer(position)
     BgServer.set_pending_piece(click_position)
     {:noreply, socket}
   end
@@ -40,6 +40,11 @@ defmodule BgServerWeb.Board do
 
   def handle_event("undo_pending_move", _value, socket) do
     BgServer.undo_pending_move()
+    {:noreply, socket}
+  end
+
+  def handle_event("commit_move", _value, socket) do
+    BgServer.commit_move()
     {:noreply, socket}
   end
 
@@ -77,10 +82,24 @@ defmodule BgServerWeb.Board do
     end
   end
 
-  defp cy_for_position(position, board, player) do
-    # used for candidate moves
-    current_pieces = board |> Map.get(position, %{}) |> Map.get(player, 0)
-    cy_for_position(position, current_pieces + 1)
+  defp cy_for_position(position, board, turn, :include_pending) do
+    current_pieces = board |> Map.get(position, %{}) |> Map.get(turn.player, 0) |> IO.inspect(label: "current_pieces")
+    pending_pieces =
+      turn.pending_moves
+      |> Enum.filter(fn {dice_value, original_position} -> original_position - dice_value == position end)
+      |> length
+
+    cy_for_position(position, current_pieces + pending_pieces + 1)
+  end
+
+  defp cy_for_position(position, board, turn, index) do
+    {position, board, turn} |> IO.inspect(label: "cy_for_position")
+    current_pieces =
+      board
+      |> Map.get(position, %{})
+      |> Map.get(turn.player, 0)
+
+    cy_for_position(position, current_pieces + 1 + index)
   end
 
   defp classes_for_piece(index, position, color, board, turn = %Turn{}) do
@@ -93,14 +112,19 @@ defmodule BgServerWeb.Board do
     end
   end
 
+  defp indexify(enumerable) do
+    Enum.with_index(enumerable, fn element, index -> {index, element} end)
+  end
+
   # business logic
+
+  defp can_roll_dice(dice_roll), do: elem(dice_roll, 0) == nil
 
   defp pieces_at_position(board, turn = %Turn{}, position, color) do
     moved_from_position =
       turn.pending_moves # list of tuples {amount, original_position}
       |> Enum.filter(fn move -> elem(move, 1) == position end)
       |> Enum.count
-
 
     board_at_position =
       board
@@ -113,8 +137,7 @@ defmodule BgServerWeb.Board do
   defp possible_moves(_board, %{pending_piece: nil}), do: []
 
   defp possible_moves(board, turn) do
-    turn.dice_roll
-    |> Tuple.to_list()
+    remaining_actions(turn)
     |> Enum.map(fn roll -> turn.pending_piece - roll end)
     |> Enum.filter(fn c -> is_valid_move(c, board, turn.player) end)
   end
@@ -130,7 +153,8 @@ defmodule BgServerWeb.Board do
     opponent_pieces_at_position == 0
   end
 
-  defp remaining_actions(dice_roll, pending_moves) do
+  defp remaining_actions(turn) do
+    %{dice_roll: dice_roll, pending_moves: pending_moves} = turn
     {a,b} = dice_roll
 
     if a == b, do: [a,a,a,a], else: [a,b]
@@ -142,9 +166,8 @@ defmodule BgServerWeb.Board do
     end)
   end
 
-  defp is_move_complete() do
-    # TODO NEXT: if move is complete, allow clicking "end move", if move is not complete, add class to board and allow clicking on current_player's pieces
-    true
+  defp is_move_complete(turn) do
+    length(remaining_actions(turn)) == 0
   end
 
   defp pending_moves(_board, turn) do

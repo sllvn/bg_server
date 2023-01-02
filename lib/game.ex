@@ -15,8 +15,8 @@ defmodule BgServer.Game do
     turn: %Turn{
       player: :black,
       pending_piece: nil,
-      dice_roll: {2,6},
-      pending_moves: [{2,6}], # a list of {dice_value, original_position} tuples
+      dice_roll: {2, 4},
+      pending_moves: [], # a list of {dice_value, original_position} tuples
     }
   }
 
@@ -38,14 +38,7 @@ defmodule BgServer.Game do
   end
 
   def move_piece(possible_move) do
-    # TODO: update to just change turn state, then if turn is complete, save changes to board and reset turn
-    {:ok, %{board: board, turn: turn}} = get_game_state()
-    IO.inspect({possible_move, turn.pending_piece})
-
-    next_board =
-      board
-      |> Map.update(possible_move, %{black: 1}, fn existing -> %{black: existing.black + 1} end)
-      |> Map.update(turn.pending_piece, %{}, fn existing -> %{black: existing.black - 1} end)
+    {:ok, %{turn: turn}} = get_game_state()
 
     original_position = turn.pending_piece
     dice_roll = original_position - possible_move
@@ -88,6 +81,39 @@ defmodule BgServer.Game do
       end
 
     {:ok, set_turn(:pending_moves, new_pending_moves)}
+  end
+
+  def commit_move() do
+    # TODO: apply turn to board, then reset turn and toggle turn.player
+    {:ok, game_state} = get_game_state()
+    %{board: board, turn: turn} = game_state
+
+    new_board =
+      turn.pending_moves
+      |> Enum.reduce(board, fn {dice_value, original_position}, board ->
+        new_position = original_position - dice_value
+        current_position_count = Map.get(board, original_position) |> Map.get(turn.player)
+        new_position_count = Map.get(board, new_position, %{}) |> Map.get(turn.player, 0)
+
+        updates =
+          %{}
+          |> Map.put(original_position, Map.put(%{}, turn.player, current_position_count - 1))
+          |> Map.put(new_position, Map.put(%{}, turn.player, new_position_count + 1))
+
+        Map.merge(board, updates)
+      end)
+
+    new_turn = %Turn{
+      player: if turn.player == :black do :white else :black end,
+      pending_piece: nil,
+      dice_roll: {nil, nil},
+      pending_moves: []
+    }
+
+    GenServer.call(__MODULE__, {:set, :board, new_board})
+    new_state = GenServer.call(__MODULE__, {:set, :turn, new_turn})
+
+    {:ok, new_state}
   end
 
   # convenience functions
