@@ -87,27 +87,34 @@ defmodule BgServerWeb.Board do
       board
       |> Map.get(position, %{})
       |> Map.get(turn.player, 0)
-      |> IO.inspect(label: "current_pieces")
+
+    moved_pieces =
+      turn.pending_moves
+      |> Enum.filter(fn {_dice_value, original_position} -> original_position == position end)
+      |> length
 
     pending_pieces =
       turn.pending_moves
-      |> Enum.filter(fn {dice_value, original_position} ->
-        original_position - dice_value == position
-      end)
+      |> Enum.filter(fn {dice_value, original_position} -> original_position - dice_value == position end)
       |> length
 
-    cy_for_position(position, current_pieces + pending_pieces + 1)
+    cy_for_position(position, current_pieces + pending_pieces + 1 - moved_pieces)
   end
 
   defp cy_for_position(position, board, turn, index) do
-    {position, board, turn} |> IO.inspect(label: "cy_for_position")
+    # {position, board, turn.pending_moves, index} |> IO.inspect(label: "cy_for_position/3")
+
+    moved_pieces =
+      turn.pending_moves
+      |> Enum.filter(fn {_dice_value, original_position} -> original_position == position end)
+      |> length
 
     current_pieces =
       board
       |> Map.get(position, %{})
       |> Map.get(turn.player, 0)
 
-    cy_for_position(position, current_pieces + 1 + index)
+    cy_for_position(position, current_pieces + 1 + index - moved_pieces)
   end
 
   defp classes_for_piece(index, position, color, board, turn = %Turn{}) do
@@ -164,18 +171,27 @@ defmodule BgServerWeb.Board do
 
   defp remaining_actions(turn) do
     %{dice_roll: dice_roll, pending_moves: pending_moves} = turn
-    {a, b} = dice_roll
-    all_moves = if a == b, do: [a, a, a, a], else: [a, b]
+    all_moves = all_moves_for_roll(dice_roll)
     consumed_moves = Enum.map(pending_moves, &elem(&1, 0))
     all_moves -- consumed_moves
+  end
+
+  def all_moves_for_roll({nil, nil}), do: []
+  def all_moves_for_roll({a, b}) do
+    if a == b and a != nil, do: [a, a, a, a], else: [a, b]
   end
 
   defp is_move_complete(turn) do
     length(remaining_actions(turn)) == 0
   end
 
-  defp pending_moves(_board, turn) do
+  defp grouped_pending_moves(_board, turn) do
     turn.pending_moves
-    |> Enum.map(fn {amount, origin} -> origin - amount end)
+    |> Enum.reduce(%{}, fn {dice_value, original_position}, acc ->
+      target_position = original_position - dice_value
+      existing_pending = Map.get(acc, target_position, [])
+      Map.put(acc, target_position, existing_pending ++ [{dice_value, original_position}])
+    end)
+    |> IO.inspect(label: "grouped_pending_moves")
   end
 end
