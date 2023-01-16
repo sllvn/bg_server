@@ -1,9 +1,6 @@
-defmodule BgServer.Turn do
-  defstruct player: :black, pending_piece: nil, dice_roll: {nil,nil}, pending_moves: []
-end
-
 defmodule BgServer.Game do
   use GenServer
+
   alias BgServer.Turn
 
   @initial_state %{
@@ -22,13 +19,20 @@ defmodule BgServer.Game do
 
   # client API
 
-  def start_link() do
+  def start_link(_opts) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   def get_game_state() do
     state = GenServer.call(__MODULE__, :current_state)
     {:ok, state}
+  end
+
+  # allow manual setting of dice for tests, TODO: replace by mocking Enum.random (see test file)
+  def roll_dice(new_dice) do
+    IO.inspect(new_dice, label: "roll_dice")
+    new_state = set_turn(:dice_roll, new_dice)
+    {:ok, new_state}
   end
 
   def roll_dice() do

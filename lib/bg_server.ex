@@ -6,8 +6,8 @@ defmodule BgServer do
     Phoenix.PubSub.subscribe(@pubsub, topic("my-game-id"))
   end
 
-  def connect_to_game(_game_id) do
-    Game.start_link()
+  def connect_to_game(game_id) do
+    Game.start_link(%{game: game_id})
 
     {:ok, state} = Game.get_game_state()
     state
