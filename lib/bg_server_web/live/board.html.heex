@@ -65,12 +65,14 @@
       <% end %>
     </g>
     <g class="pending-moves">
-      <%= for {_position, pending_moves} <- grouped_pending_moves(@board, @turn) do %>
+      <%= for {position, pending_moves} <- grouped_pending_moves(@board, @turn) do %>
         <circle
           :for={{index, {dice_value, original_position}} <- indexify(pending_moves)}
           cx={cx_for_position(original_position - dice_value)}
           cy={cy_for_position(original_position - dice_value, @board, @turn, index)}
           r="35"
+          phx-click="set_pending_piece"
+          phx-value-position={position}
         >
         </circle>
       <% end %>

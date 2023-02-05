@@ -42,7 +42,8 @@ defmodule BgServer.Game do
     original_position = turn.pending_piece
     dice_roll = original_position - possible_move
 
-    set_turn(:pending_moves, [{dice_roll, original_position} | turn.pending_moves])
+    # insert move at end so to allow moving same piece twice
+    set_turn(:pending_moves, [{dice_roll, original_position} | turn.pending_moves] |> Enum.reverse)
     new_state = set_turn(:pending_piece, nil)
 
     {:ok, new_state}
