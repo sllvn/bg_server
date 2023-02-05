@@ -35,7 +35,7 @@ defmodule BgServer.GameTest do
     assert game.turn.player == :white
 
     # white's turn
-    {:ok, game} = Game.roll_dice({3, 5}) # TODO: replace this using mox library
+    {:ok, game} = Game.roll_dice({3, 5})
     assert game.turn.player == :white
     assert game.turn.dice_roll == {3,5}
 

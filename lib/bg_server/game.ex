@@ -21,8 +21,8 @@ defmodule BgServer.Game do
 
   # client API
 
-  def start_link(_opts) do
-    IO.inspect(_opts, label: "start_link opts")
+  def start_link(opts) do
+    IO.inspect(opts, label: "start_link opts")
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
@@ -31,15 +31,7 @@ defmodule BgServer.Game do
     {:ok, state}
   end
 
-  # allow manual setting of dice for tests, TODO: replace by mocking Enum.random (see test file)
-  def roll_dice(new_dice) do
-    IO.inspect(new_dice, label: "roll_dice")
-    new_state = set_turn(:dice_roll, new_dice)
-    {:ok, new_state}
-  end
-
-  def roll_dice() do
-    new_dice = {Enum.random(1..6), Enum.random(1..6)}
+  def roll_dice(new_dice \\ {Enum.random(1..6), Enum.random(1..6)}) do
     new_state = set_turn(:dice_roll, new_dice)
     {:ok, new_state}
   end
