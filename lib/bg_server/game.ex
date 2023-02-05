@@ -3,7 +3,7 @@ defmodule BgServer.Game do
 
   alias BgServer.Turn
 
-  @initial_state %{
+  @empty_game %{
     board: %{
       1 => %{white: 2}, 12 => %{white: 5}, 17 => %{white: 3}, 19 => %{white: 5},
       6 => %{black: 5}, 8 => %{black: 3}, 13 => %{black: 5}, 24 => %{black: 2}
@@ -17,9 +17,12 @@ defmodule BgServer.Game do
     }
   }
 
+  defstruct [:id, state: @empty_game]
+
   # client API
 
   def start_link(_opts) do
+    IO.inspect(_opts, label: "start_link opts")
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
@@ -54,7 +57,7 @@ defmodule BgServer.Game do
   end
 
   def reset_game() do
-    %{board: board, current_player: current_player, turn: turn} = @initial_state
+    %{board: board, current_player: current_player, turn: turn} = @empty_game
 
     GenServer.call(__MODULE__, {:set, :current_player, current_player})
     GenServer.call(__MODULE__, {:set, :turn, turn})
@@ -132,7 +135,7 @@ defmodule BgServer.Game do
 
   @impl true
   def init(_initial_state) do
-    {:ok, @initial_state}
+    {:ok, @empty_game}
   end
 
   @impl true

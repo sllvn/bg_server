@@ -14,12 +14,12 @@ defmodule BgServer.GameTest do
   }
   @empty_turn %Turn{player: :black, pending_piece: nil, dice_roll: {}, pending_moves: []}
 
-  test "updates the board after both players take a turn", %{game: game} do
+  test "updates the board after both players take a turn", %{game: _game_pid} do
     # black's turn
-    {:ok, state} = Game.get_game_state()
-    assert state.board == @empty_board
-    assert state.turn.player == :black
-    assert state.turn.dice_roll == {2,2}
+    {:ok, game} = Game.get_game_state()
+    assert game.board == @empty_board
+    assert game.turn.player == :black
+    assert game.turn.dice_roll == {2,2}
 
     Game.set_pending_piece(6)
     Game.move_piece(4)
@@ -28,28 +28,27 @@ defmodule BgServer.GameTest do
     Game.set_pending_piece(6)
     Game.move_piece(4)
 
-    {:ok, state} = Game.commit_move()
+    {:ok, game} = Game.commit_move()
 
-    assert state.board[4] == %{black: 4}
-    assert state.board[6] == %{black: 1}
-    assert state.turn.player == :white
+    assert game.board[4] == %{black: 4}
+    assert game.board[6] == %{black: 1}
+    assert game.turn.player == :white
 
     # white's turn
-    {:ok, state} = Game.roll_dice({3, 5}) # TODO: replace this using mox library
-    assert state.turn.player == :white
-    assert state.turn.dice_roll == {3,5}
+    {:ok, game} = Game.roll_dice({3, 5}) # TODO: replace this using mox library
+    assert game.turn.player == :white
+    assert game.turn.dice_roll == {3,5}
 
     Game.set_pending_piece(19)
     Game.move_piece(22)
     Game.set_pending_piece(17)
     Game.move_piece(22)
 
-    {:ok, state} = Game.commit_move()
-    IO.inspect(state)
+    {:ok, game} = Game.commit_move()
 
-    assert state.board[19] == %{white: 4}
-    assert state.board[17] == %{white: 2}
-    assert state.board[22] == %{white: 2}
-    assert state.turn.player == :black
+    assert game.board[19] == %{white: 4}
+    assert game.board[17] == %{white: 2}
+    assert game.board[22] == %{white: 2}
+    assert game.turn.player == :black
   end
 end
