@@ -12,8 +12,8 @@ defmodule BgServer.Game do
     turn: %Turn{
       player: :black,
       pending_piece: nil,
-      dice_roll: {2, 2},
-      pending_moves: [{2,6}], # a list of {dice_value, original_position} tuples
+      dice_roll: {nil, nil},
+      pending_moves: [], # a list of {dice_value, original_position} tuples
     }
   }
 
