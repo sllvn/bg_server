@@ -1,7 +1,6 @@
 defmodule BgServer.Game do
   use GenServer
-
-  alias BgServer.{Board,Turn}
+  alias BgServer.{Board, Turn}
 
   @empty_game %{board: %Board{}, current_player: :black, turn: %Turn{}}
 
@@ -20,9 +19,11 @@ defmodule BgServer.Game do
   end
 
   def reset_game() do
-    GenServer.call(__MODULE__, {:set, :current_player, :black})
-    GenServer.call(__MODULE__, {:set, :turn, %Turn{}})
-    new_state = GenServer.call(__MODULE__, {:set, :board, %Board{}})
+    new_state =
+      GenServer.call(
+        __MODULE__,
+        {:update_state, :board, %Board{}, turn: %Turn{}, current_player: :black}
+      )
 
     {:ok, new_state}
   end
@@ -31,7 +32,7 @@ defmodule BgServer.Game do
     {:ok, %{turn: turn}} = get_game_state()
 
     new_turn = Turn.roll_dice(turn, new_dice)
-    new_state = GenServer.call(__MODULE__, {:set, :turn, new_turn})
+    new_state = GenServer.call(__MODULE__, {:update_state, turn: new_turn})
 
     {:ok, new_state}
   end
@@ -40,7 +41,7 @@ defmodule BgServer.Game do
     {:ok, %{turn: turn}} = get_game_state()
 
     new_turn = Turn.move_piece(turn, possible_move)
-    new_state = GenServer.call(__MODULE__, {:set, :turn, new_turn})
+    new_state = GenServer.call(__MODULE__, {:update_state, turn: new_turn})
 
     {:ok, new_state}
   end
@@ -49,7 +50,7 @@ defmodule BgServer.Game do
     {:ok, %{turn: turn}} = get_game_state()
 
     new_turn = Turn.set_pending_piece(turn, position)
-    new_state = GenServer.call(__MODULE__, {:set, :turn, new_turn})
+    new_state = GenServer.call(__MODULE__, {:update_state, turn: new_turn})
 
     {:ok, new_state}
   end
@@ -58,7 +59,7 @@ defmodule BgServer.Game do
     {:ok, %{turn: turn}} = get_game_state()
 
     new_turn = Turn.undo_pending_move(turn)
-    new_state = GenServer.call(__MODULE__, {:set, :turn, new_turn})
+    new_state = GenServer.call(__MODULE__, {:update_state, turn: new_turn})
 
     {:ok, new_state}
   end
@@ -69,8 +70,7 @@ defmodule BgServer.Game do
     new_board = Board.commit_turn(board, turn)
     new_turn = %Turn{player: if(turn.player == :black, do: :white, else: :black)}
 
-    GenServer.call(__MODULE__, {:set, :board, new_board})
-    new_state = GenServer.call(__MODULE__, {:set, :turn, new_turn})
+    new_state = GenServer.call(__MODULE__, {:update_state, turn: new_turn, board: new_board})
 
     {:ok, new_state}
   end
@@ -83,8 +83,8 @@ defmodule BgServer.Game do
   end
 
   @impl true
-  def handle_call({:set, key, value}, _from, state) do
-    new_state = Map.put(state, key, value)
+  def handle_call({:update_state, updates}, _from, state) do
+    new_state = Enum.reduce(updates, state, fn {k, v}, acc -> Map.put(acc, k, v) end)
     {:reply, new_state, new_state}
   end
 
