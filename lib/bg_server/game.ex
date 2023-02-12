@@ -1,20 +1,13 @@
 defmodule BgServer.Game do
   use GenServer
 
-  alias BgServer.Turn
+  alias BgServer.{Turn, Board}
 
   @empty_game %{
-    board: %{
-      1 => %{white: 2}, 12 => %{white: 5}, 17 => %{white: 3}, 19 => %{white: 5},
-      6 => %{black: 5}, 8 => %{black: 3}, 13 => %{black: 5}, 24 => %{black: 2}
-    },
+    # board: %Board{},
+    board: Board.empty_board(),
     current_player: :black,
-    turn: %Turn{
-      player: :black,
-      pending_piece: nil,
-      dice_roll: {nil, nil},
-      pending_moves: [], # a list of {dice_value, original_position} tuples
-    }
+    turn: %Turn{}
   }
 
   defstruct [:id, state: @empty_game]
@@ -31,30 +24,28 @@ defmodule BgServer.Game do
     {:ok, state}
   end
 
+  def reset_game() do
+    GenServer.call(__MODULE__, {:set, :current_player, :black})
+    GenServer.call(__MODULE__, {:set, :turn, %Turn{}})
+    new_state = GenServer.call(__MODULE__, {:set, :board, @empty_game.board})
+
+    {:ok, new_state}
+  end
+
   def roll_dice(new_dice \\ {Enum.random(1..6), Enum.random(1..6)}) do
-    new_state = set_turn(:dice_roll, new_dice)
+    {:ok, %{turn: turn}} = get_game_state()
+
+    new_turn = Turn.roll_dice(turn, new_dice)
+    new_state = GenServer.call(__MODULE__, {:set, :turn, new_turn})
+
     {:ok, new_state}
   end
 
   def move_piece(possible_move) do
     {:ok, %{turn: turn}} = get_game_state()
 
-    original_position = turn.pending_piece
-    dice_roll = original_position - possible_move
-
-    # insert move at end so to allow moving same piece twice
-    set_turn(:pending_moves, [{dice_roll, original_position} | turn.pending_moves] |> Enum.reverse)
-    new_state = set_turn(:pending_piece, nil)
-
-    {:ok, new_state}
-  end
-
-  def reset_game() do
-    %{board: board, current_player: current_player, turn: turn} = @empty_game
-
-    GenServer.call(__MODULE__, {:set, :current_player, current_player})
-    GenServer.call(__MODULE__, {:set, :turn, turn})
-    new_state = GenServer.call(__MODULE__, {:set, :board, board})
+    new_turn = Turn.move_piece(turn, possible_move)
+    new_state = GenServer.call(__MODULE__, {:set, :turn, new_turn})
 
     {:ok, new_state}
   end
@@ -62,25 +53,19 @@ defmodule BgServer.Game do
   def set_pending_piece(position) do
     {:ok, %{turn: turn}} = get_game_state()
 
-    new_pending_piece =
-      cond do
-        position == turn.pending_piece -> nil
-        true -> position
-      end
+    new_turn = Turn.set_pending_piece(turn, position)
+    new_state = GenServer.call(__MODULE__, {:set, :turn, new_turn})
 
-    {:ok, set_turn(:pending_piece, new_pending_piece)}
+    {:ok, new_state}
   end
 
   def undo_pending_move() do
     {:ok, %{turn: turn}} = get_game_state()
 
-    new_pending_moves =
-      case turn.pending_moves do
-        [] -> []
-        [_ | remaining_moves] -> remaining_moves
-      end
+    new_turn = Turn.undo_pending_move(turn)
+    new_state = GenServer.call(__MODULE__, {:set, :turn, new_turn})
 
-    {:ok, set_turn(:pending_moves, new_pending_moves)}
+    {:ok, new_state}
   end
 
   def commit_move() do
@@ -104,7 +89,12 @@ defmodule BgServer.Game do
       end)
 
     new_turn = %Turn{
-      player: if turn.player == :black do :white else :black end,
+      player:
+        if turn.player == :black do
+          :white
+        else
+          :black
+        end,
       pending_piece: nil,
       dice_roll: {nil, nil},
       pending_moves: []
@@ -114,14 +104,6 @@ defmodule BgServer.Game do
     new_state = GenServer.call(__MODULE__, {:set, :turn, new_turn})
 
     {:ok, new_state}
-  end
-
-  # convenience functions
-
-  defp set_turn(key, value) do
-    {:ok, %{turn: turn}} = get_game_state()
-    new_turn = Map.put(turn, key, value)
-    GenServer.call(__MODULE__, {:set, :turn, new_turn})
   end
 
   # server callbacks
