@@ -1,23 +1,11 @@
 defmodule BgServer.GameTest do
   use ExUnit.Case
 
-  alias BgServer.{Game,Turn}
+  alias BgServer.{Board,Game,Turn}
 
   setup do
     %{game: start_supervised!(BgServer.Game)}
   end
-
-  @empty_board %{
-    1 => %{white: 2},
-    6 => %{black: 5},
-    8 => %{black: 3},
-    12 => %{white: 5},
-    13 => %{black: 5},
-    17 => %{white: 3},
-    19 => %{white: 5},
-    24 => %{black: 2}
-  }
-  @empty_turn %Turn{player: :black, pending_piece: nil, dice_roll: {nil, nil}, pending_moves: []}
 
   def move_piece(start_point, end_point) do
     Game.set_pending_piece(start_point)
@@ -27,24 +15,24 @@ defmodule BgServer.GameTest do
   test "updates the board after each players' turn", %{game: _game_pid} do
     # black's turn
     {:ok, game} = Game.get_game_state()
-    assert game.turn == @empty_turn
+    assert game.turn == %Turn{}
 
     {:ok, game} = Game.roll_dice({2, 2})
-    assert game.board == @empty_board
+    assert game.board == %Board{}
     assert game.turn.player == :black
     assert game.turn.dice_roll == {2,2}
 
-    for _ <- 1..4, do: move_piece(6, 4) # move 4 black checkeers from 6 to 4
+    for _ <- 1..4, do: move_piece(6, 4) # move 4 black checkers from 6 to 4
 
     {:ok, game} = Game.commit_move()
 
-    assert game.board[4] == %{black: 4}
-    assert game.board[6] == %{black: 1}
+    assert game.board.points[4] == %{black: 4}
+    assert game.board.points[6] == %{black: 1}
     assert game.turn.player == :white
 
     # white's turn
     {:ok, game} = Game.get_game_state()
-    assert game.turn == %Turn{@empty_turn | player: :white}
+    assert game.turn == %Turn{player: :white}
 
     {:ok, game} = Game.roll_dice({3, 5})
     assert game.turn.player == :white
@@ -55,9 +43,9 @@ defmodule BgServer.GameTest do
 
     {:ok, game} = Game.commit_move()
 
-    assert game.board[19] == %{white: 4}
-    assert game.board[17] == %{white: 2}
-    assert game.board[22] == %{white: 2}
+    assert game.board.points[19] == %{white: 4}
+    assert game.board.points[17] == %{white: 2}
+    assert game.board.points[22] == %{white: 2}
     assert game.turn.player == :black
   end
 
@@ -70,9 +58,9 @@ defmodule BgServer.GameTest do
       Game.commit_move()
 
       {:ok, game} = Game.get_game_state()
-      assert game.board[8] == %{black: 1}
-      assert game.board[3] == %{black: 1}
-      assert game.board[6] == %{black: 6}
+      assert game.board.points[8] == %{black: 1}
+      assert game.board.points[3] == %{black: 1}
+      assert game.board.points[6] == %{black: 6}
     end
 
     test "allows moving the same checker twice" do
@@ -83,8 +71,8 @@ defmodule BgServer.GameTest do
       Game.commit_move()
 
       {:ok, game} = Game.get_game_state()
-      assert game.board[8] == %{black: 2}
-      assert game.board[2] == %{black: 1}
+      assert game.board.points[8] == %{black: 2}
+      assert game.board.points[2] == %{black: 1}
     end
   end
 

@@ -10,7 +10,7 @@ defmodule BgServerWeb.Board do
 
     {:ok,
      assign(socket,
-       board: board,
+       board: board.points,
        current_player: current_player,
        turn: turn
      )}
@@ -53,7 +53,7 @@ defmodule BgServerWeb.Board do
 
     {:noreply,
      assign(socket,
-       board: board,
+       board: board.points,
        turn: turn,
        current_player: current_player
      )}

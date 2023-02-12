@@ -1,14 +1,9 @@
 defmodule BgServer.Game do
   use GenServer
 
-  alias BgServer.{Turn, Board}
+  alias BgServer.{Board,Turn}
 
-  @empty_game %{
-    # board: %Board{},
-    board: Board.empty_board(),
-    current_player: :black,
-    turn: %Turn{}
-  }
+  @empty_game %{board: %Board{}, current_player: :black, turn: %Turn{}}
 
   defstruct [:id, state: @empty_game]
 
@@ -27,7 +22,7 @@ defmodule BgServer.Game do
   def reset_game() do
     GenServer.call(__MODULE__, {:set, :current_player, :black})
     GenServer.call(__MODULE__, {:set, :turn, %Turn{}})
-    new_state = GenServer.call(__MODULE__, {:set, :board, @empty_game.board})
+    new_state = GenServer.call(__MODULE__, {:set, :board, %Board{}})
 
     {:ok, new_state}
   end
@@ -69,36 +64,10 @@ defmodule BgServer.Game do
   end
 
   def commit_move() do
-    # TODO: apply turn to board, then reset turn and toggle turn.player
-    {:ok, game_state} = get_game_state()
-    %{board: board, turn: turn} = game_state
+    {:ok, %{board: board, turn: turn}} = get_game_state()
 
-    new_board =
-      turn.pending_moves
-      |> Enum.reduce(board, fn {dice_value, original_position}, board ->
-        new_position = original_position - dice_value
-        current_position_count = Map.get(board, original_position) |> Map.get(turn.player)
-        new_position_count = Map.get(board, new_position, %{}) |> Map.get(turn.player, 0)
-
-        updates =
-          %{}
-          |> Map.put(original_position, Map.put(%{}, turn.player, current_position_count - 1))
-          |> Map.put(new_position, Map.put(%{}, turn.player, new_position_count + 1))
-
-        Map.merge(board, updates)
-      end)
-
-    new_turn = %Turn{
-      player:
-        if turn.player == :black do
-          :white
-        else
-          :black
-        end,
-      pending_piece: nil,
-      dice_roll: {nil, nil},
-      pending_moves: []
-    }
+    new_board = Board.commit_turn(board, turn)
+    new_turn = %Turn{player: if(turn.player == :black, do: :white, else: :black)}
 
     GenServer.call(__MODULE__, {:set, :board, new_board})
     new_state = GenServer.call(__MODULE__, {:set, :turn, new_turn})
