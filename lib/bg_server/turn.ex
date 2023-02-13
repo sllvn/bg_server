@@ -1,4 +1,5 @@
 defmodule BgServer.Turn do
+  # pending_moves is a list of {dice_roll, start_position} tuples
   defstruct player: :black, pending_piece: nil, dice_roll: {nil, nil}, pending_moves: []
 
   def move_piece(turn = %__MODULE__{}, possible_move) do

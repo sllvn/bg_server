@@ -8,8 +8,7 @@ defmodule BgServer.Game do
 
   # client API
 
-  def start_link(opts) do
-    IO.inspect(opts, label: "start_link opts")
+  def start_link(_empty_opts = []) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
