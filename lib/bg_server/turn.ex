@@ -4,7 +4,11 @@ defmodule BgServer.Turn do
 
   def move_piece(turn = %__MODULE__{}, possible_move) do
     original_position = turn.pending_piece
-    dice_roll = original_position - possible_move
+
+    dice_roll =
+      if turn.player == :black,
+        do: original_position - possible_move,
+        else: possible_move - original_position
 
     %__MODULE__{
       turn

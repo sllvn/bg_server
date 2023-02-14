@@ -36,43 +36,42 @@ defmodule BgServer.Game do
     {:ok, new_state}
   end
 
-  def move_piece(possible_move) do
-    {:ok, %{turn: turn}} = get_game_state()
+  def move_piece(possible_move),
+    do: update_state(fn %{turn: turn} -> %{turn: Turn.move_piece(turn, possible_move)} end)
 
-    new_turn = Turn.move_piece(turn, possible_move)
-    new_state = GenServer.call(__MODULE__, {:update_state, turn: new_turn})
+  def set_pending_piece(position),
+    do: update_state(fn %{turn: turn} -> %{turn: Turn.set_pending_piece(turn, position)} end)
 
-    {:ok, new_state}
-  end
+  def undo_pending_move(),
+    do: update_state(fn %{turn: turn} -> %{turn: Turn.undo_pending_move(turn)} end)
 
-  def set_pending_piece(position) do
-    {:ok, %{turn: turn}} = get_game_state()
-
-    new_turn = Turn.set_pending_piece(turn, position)
-    new_state = GenServer.call(__MODULE__, {:update_state, turn: new_turn})
-
-    {:ok, new_state}
-  end
-
-  def undo_pending_move() do
-    {:ok, %{turn: turn}} = get_game_state()
-
-    new_turn = Turn.undo_pending_move(turn)
-    new_state = GenServer.call(__MODULE__, {:update_state, turn: new_turn})
-
-    {:ok, new_state}
-  end
+  # def commit_move(),
+  #   do:
+  #     some_helper(fn %{turn: turn, board: board} ->
+  #       %{
+  #         board: Board.commit_turn(board, turn),
+  #         turn: %Turn{player: if(turn.player == :black, do: :white, else: :black)}
+  #       }
+  #     end)
 
   def commit_move() do
     {:ok, %{board: board, turn: turn}} = get_game_state()
 
-    new_board = Board.commit_turn(board, turn)
+    {:ok, new_board} = Board.commit_turn(board, turn)
     new_turn = %Turn{player: if(turn.player == :black, do: :white, else: :black)}
 
     new_state = GenServer.call(__MODULE__, {:update_state, turn: new_turn, board: new_board})
 
     {:ok, new_state}
   end
+
+  defp update_state(updater_fn) do
+    {:ok, old_state} = get_game_state()
+    updated_state = updater_fn.(old_state)
+    new_state = GenServer.call(__MODULE__, {:update_state, updated_state})
+    {:ok, new_state}
+  end
+
 
   # server callbacks
 

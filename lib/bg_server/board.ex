@@ -30,21 +30,26 @@ defmodule BgServer.Board do
             bar: %{}
 
   def commit_turn(board = %__MODULE__{}, turn = %Turn{}) do
-    new_points =
-      turn.pending_moves
-      |> Enum.reduce(board.points, fn {dice_value, original_position}, points ->
-        new_position = original_position - dice_value
-        current_position_count = Map.get(points, original_position) |> Map.get(turn.player)
-        new_position_count = Map.get(points, new_position, %{}) |> Map.get(turn.player, 0)
+    new_points = Enum.reduce(turn.pending_moves, board.points, &move_checker(&1, &2, turn))
 
-        updates =
-          %{}
-          |> Map.put(original_position, Map.put(%{}, turn.player, current_position_count - 1))
-          |> Map.put(new_position, Map.put(%{}, turn.player, new_position_count + 1))
+    {:ok, %__MODULE__{board | points: new_points}}
+  end
 
-        Map.merge(points, updates)
-      end)
+  def move_checker({dice_value, original_position}, points, turn = %Turn{}) do
+    new_position = if turn.player == :black do
+      original_position - dice_value
+    else
+      original_position + dice_value
+    end
 
-    %__MODULE__{board | points: new_points}
+    current_position_count = Map.get(points, original_position) |> Map.get(turn.player)
+    new_position_count = Map.get(points, new_position, %{}) |> Map.get(turn.player, 0)
+
+    updates =
+      %{}
+      |> Map.put(original_position, Map.put(%{}, turn.player, current_position_count - 1))
+      |> Map.put(new_position, Map.put(%{}, turn.player, new_position_count + 1))
+
+    Map.merge(points, updates)
   end
 end
