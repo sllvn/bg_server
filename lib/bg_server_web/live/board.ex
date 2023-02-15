@@ -1,6 +1,6 @@
 defmodule BgServerWeb.Board do
   use BgServerWeb, :live_view
-  alias BgServer.Turn
+  alias BgServer.{Board,Turn}
 
   def mount(_params, _session, socket) do
     game = BgServer.connect_to_game(:some_game_id)
@@ -10,7 +10,7 @@ defmodule BgServerWeb.Board do
 
     {:ok,
      assign(socket,
-       board: board.points,
+       board: board,
        current_player: current_player,
        turn: turn
      )}
@@ -53,7 +53,7 @@ defmodule BgServerWeb.Board do
 
     {:noreply,
      assign(socket,
-       board: board.points,
+       board: board,
        turn: turn,
        current_player: current_player
      )}
@@ -95,7 +95,9 @@ defmodule BgServerWeb.Board do
 
     pending_pieces =
       turn.pending_moves
-      |> Enum.filter(fn {dice_value, original_position} -> original_position - dice_value == position end)
+      |> Enum.filter(fn {dice_value, original_position} ->
+        original_position - dice_value == position
+      end)
       |> length
 
     cy_for_position(position, current_pieces + pending_pieces + 1 - moved_pieces)
@@ -117,8 +119,8 @@ defmodule BgServerWeb.Board do
     cy_for_position(position, current_pieces + 1 + index - moved_pieces)
   end
 
-  defp classes_for_piece(index, position, color, board, turn = %Turn{}) do
-    num_pieces = pieces_at_position(board, turn, position, color)
+  defp classes_for_piece(index, position, color, board = %Board{}, turn = %Turn{}) do
+    num_pieces = Board.pieces_at_position(board, turn, position, color)
 
     cond do
       turn.pending_piece == position and index == num_pieces -> "final active"
@@ -131,67 +133,16 @@ defmodule BgServerWeb.Board do
     Enum.with_index(enumerable, fn element, index -> {index, element} end)
   end
 
-  # business logic
-
-  defp can_roll_dice(dice_roll), do: elem(dice_roll, 0) == nil
-
-  defp pieces_at_position(board, turn = %Turn{}, position, color) do
-    # list of tuples {amount, original_position}
-    moved_from_position =
-      turn.pending_moves
-      |> Enum.filter(fn move -> elem(move, 1) == position end)
-      |> Enum.count()
-
-    board_at_position =
-      board
-      |> Map.get(position, %{})
-      |> Map.get(color, 0)
-
-    board_at_position - moved_from_position
-  end
-
-  defp possible_moves(_board, %{pending_piece: nil}), do: []
-
-  defp possible_moves(board, turn) do
-    remaining_actions(turn)
-    |> Enum.map(fn roll -> turn.pending_piece - roll end)
-    |> Enum.filter(fn c -> is_valid_move(c, board, turn.player) end)
-  end
-
-  defp is_valid_move(candidate_position, board, current_player) do
-    opponent = if current_player == :black, do: :white, else: :black
-
-    opponent_pieces_at_position =
-      board
-      |> Map.get(candidate_position, %{})
-      |> Map.get(opponent, 0)
-
-    opponent_pieces_at_position == 0
-  end
-
-  defp remaining_actions(turn) do
-    %{dice_roll: dice_roll, pending_moves: pending_moves} = turn
-    all_moves = all_moves_for_roll(dice_roll)
-    consumed_moves = Enum.map(pending_moves, &elem(&1, 0))
-    all_moves -- consumed_moves
-  end
-
-  def all_moves_for_roll({nil, nil}), do: []
-  def all_moves_for_roll({a, b}) do
-    if a == b and a != nil, do: [a, a, a, a], else: [a, b]
-  end
-
-  defp is_move_complete(turn) do
-    length(remaining_actions(turn)) == 0
-  end
-
-  defp grouped_pending_moves(_board, turn) do
+  defp grouped_pending_moves(_board = %Board{}, turn = %Turn{}) do
     turn.pending_moves
     |> Enum.reduce(%{}, fn {dice_value, original_position}, acc ->
-      target_position = original_position - dice_value
+      target_position = Board.apply_dice(original_position, dice_value, turn.player)
       existing_pending = Map.get(acc, target_position, [])
       Map.put(acc, target_position, existing_pending ++ [{dice_value, original_position}])
     end)
-    |> IO.inspect(label: "grouped_pending_moves")
   end
+
+  # business logic
+
+  defp can_roll_dice(dice_roll), do: elem(dice_roll, 0) == nil
 end

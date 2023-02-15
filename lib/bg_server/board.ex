@@ -35,12 +35,7 @@ defmodule BgServer.Board do
   end
 
   def move_checker({dice_value, original_position}, points, turn = %Turn{}) do
-    new_position = if turn.player == :black do
-      original_position - dice_value
-    else
-      original_position + dice_value
-    end
-
+    new_position = apply_dice(original_position, dice_value, turn.player)
     current_position_count = Map.get(points, original_position) |> Map.get(turn.player)
     new_position_count = Map.get(points, new_position, %{}) |> Map.get(turn.player, 0)
 
@@ -50,5 +45,41 @@ defmodule BgServer.Board do
       |> Map.put(new_position, Map.put(%{}, turn.player, new_position_count + 1))
 
     Map.merge(points, updates)
+  end
+
+  def apply_dice(position, dice_value, :black), do: position - dice_value
+  def apply_dice(position, dice_value, :white), do: position + dice_value
+
+  def possible_moves(_board = %__MODULE__{}, %{pending_piece: nil}), do: []
+  def possible_moves(board = %__MODULE__{}, turn = %Turn{}) do
+    Turn.remaining_actions(turn)
+    |> Enum.map(fn roll -> apply_dice(turn.pending_piece, roll, turn.player) end)
+    |> Enum.filter(fn c -> is_valid_move(c, board.points, turn.player) end)
+  end
+
+  defp is_valid_move(candidate_position, points, current_player) do
+    opponent = if current_player == :black, do: :white, else: :black
+
+    opponent_pieces_at_position =
+      points
+      |> Map.get(candidate_position, %{})
+      |> Map.get(opponent, 0)
+
+    opponent_pieces_at_position == 0
+  end
+
+  def pieces_at_position(board = %__MODULE__{}, turn = %Turn{}, position, color) do
+    # list of tuples {amount, original_position}
+    moved_from_position =
+      turn.pending_moves
+      |> Enum.filter(fn move -> elem(move, 1) == position end)
+      |> Enum.count()
+
+    points_at_position =
+      board.points
+      |> Map.get(position, %{})
+      |> Map.get(color, 0)
+
+    points_at_position - moved_from_position
   end
 end

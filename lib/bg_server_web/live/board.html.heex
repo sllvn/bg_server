@@ -42,7 +42,7 @@
   </g>
   <g>
     <g :for={color <- [:white, :black]} class={color}>
-      <%= for position <- 1..24, index <- 0..pieces_at_position(@board, @turn, position, color) do %>
+      <%= for position <- 1..24, index <- 0..Board.pieces_at_position(@board, @turn, position, color) do %>
         <%= if color == @turn.player do %>
           <circle
             cx={cx_for_position(position)}
@@ -51,6 +51,7 @@
             class={classes_for_piece(index, position, color, @board, @turn)}
             phx-click="set_pending_piece"
             phx-value-position={position}
+            data-position={position}
           >
           </circle>
         <% else %>
@@ -59,6 +60,7 @@
             cy={cy_for_position(position, index)}
             r="35"
             class={classes_for_piece(index, position, color, @board, @turn)}
+            data-position={position}
           >
           </circle>
         <% end %>
@@ -68,20 +70,21 @@
       <%= for {position, pending_moves} <- grouped_pending_moves(@board, @turn) do %>
         <circle
           :for={{index, {dice_value, original_position}} <- indexify(pending_moves)}
-          cx={cx_for_position(original_position - dice_value)}
-          cy={cy_for_position(original_position - dice_value, @board, @turn, index)}
+          cx={cx_for_position(Board.apply_dice(original_position, dice_value, @turn.player))}
+          cy={cy_for_position(Board.apply_dice(original_position, dice_value, @turn.player), @board.points, @turn, index)}
           r="35"
           phx-click="set_pending_piece"
           phx-value-position={position}
+          data-position={position}
         >
         </circle>
       <% end %>
     </g>
     <g class="possible-moves">
       <circle
-        :for={possible_move <- possible_moves(@board, @turn)}
+        :for={possible_move <- Board.possible_moves(@board, @turn)}
         cx={cx_for_position(possible_move)}
-        cy={cy_for_position(possible_move, @board, @turn, :include_pending)}
+        cy={cy_for_position(possible_move, @board.points, @turn, :include_pending)}
         r="35"
         phx-click="move_pending_piece"
         phx-value-possible-move={possible_move}
@@ -112,14 +115,14 @@
     </button>
     <div class="inline-block ml-4 mr-4">
       <label class="mr-2 font-bold">remaining:</label>
-      <span :for={remaining_action <- remaining_actions(@turn)} class="mr-2">
+      <span :for={remaining_action <- Turn.remaining_actions(@turn)} class="mr-2">
         <%= remaining_action %>
       </span>
     </div>
     <button type="button" phx-click="undo_pending_move" disabled={length(@turn.pending_moves) < 1}>
       undo
     </button>
-    <button type="button" phx-click="commit_move" disabled={!is_move_complete(@turn)}>
+    <button type="button" phx-click="commit_move" disabled={!Turn.is_complete(@turn)}>
       end move
     </button>
   </div>

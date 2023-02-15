@@ -5,10 +5,8 @@ defmodule BgServer.Turn do
   def move_piece(turn = %__MODULE__{}, possible_move) do
     original_position = turn.pending_piece
 
-    dice_roll =
-      if turn.player == :black,
-        do: original_position - possible_move,
-        else: possible_move - original_position
+    # TODO: this is a circular dependency, should apply_dice live elsewhere?
+    dice_roll = BgServer.Board.apply_dice(original_position, possible_move, turn.player)
 
     %__MODULE__{
       turn
@@ -39,5 +37,21 @@ defmodule BgServer.Turn do
       end
 
     %__MODULE__{turn | pending_moves: new_pending_moves}
+  end
+
+  def remaining_actions(turn = %__MODULE__{}) do
+    %{dice_roll: dice_roll, pending_moves: pending_moves} = turn
+    all_moves = all_moves_for_roll(dice_roll)
+    consumed_moves = Enum.map(pending_moves, &elem(&1, 0))
+    all_moves -- consumed_moves
+  end
+
+  def is_complete(turn = %__MODULE__{}) do
+    length(remaining_actions(turn)) == 0
+  end
+
+  defp all_moves_for_roll({nil, nil}), do: []
+  defp all_moves_for_roll({a, b}) do
+    if a == b and a != nil, do: [a, a, a, a], else: [a, b]
   end
 end
