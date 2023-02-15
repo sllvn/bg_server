@@ -31,8 +31,7 @@ defmodule BgServer.Board do
 
   def commit_turn(board = %__MODULE__{}, turn = %Turn{}) do
     new_points = Enum.reduce(turn.pending_moves, board.points, &move_checker(&1, &2, turn))
-
-    {:ok, %__MODULE__{board | points: new_points}}
+    %__MODULE__{board | points: new_points}
   end
 
   def move_checker({dice_value, original_position}, points, turn = %Turn{}) do

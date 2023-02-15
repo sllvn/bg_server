@@ -17,24 +17,10 @@ defmodule BgServer.Game do
     {:ok, state}
   end
 
-  def reset_game() do
-    new_state =
-      GenServer.call(
-        __MODULE__,
-        {:update_state, :board, %Board{}, turn: %Turn{}, current_player: :black}
-      )
+  def reset_game(), do: update_state(fn _ -> @empty_game end)
 
-    {:ok, new_state}
-  end
-
-  def roll_dice(new_dice \\ {Enum.random(1..6), Enum.random(1..6)}) do
-    {:ok, %{turn: turn}} = get_game_state()
-
-    new_turn = Turn.roll_dice(turn, new_dice)
-    new_state = GenServer.call(__MODULE__, {:update_state, turn: new_turn})
-
-    {:ok, new_state}
-  end
+  def roll_dice(new_dice \\ {Enum.random(1..6), Enum.random(1..6)}),
+    do: update_state(fn %{turn: turn} -> %{turn: Turn.roll_dice(turn, new_dice)} end)
 
   def move_piece(possible_move),
     do: update_state(fn %{turn: turn} -> %{turn: Turn.move_piece(turn, possible_move)} end)
@@ -45,33 +31,20 @@ defmodule BgServer.Game do
   def undo_pending_move(),
     do: update_state(fn %{turn: turn} -> %{turn: Turn.undo_pending_move(turn)} end)
 
-  # def commit_move(),
-  #   do:
-  #     some_helper(fn %{turn: turn, board: board} ->
-  #       %{
-  #         board: Board.commit_turn(board, turn),
-  #         turn: %Turn{player: if(turn.player == :black, do: :white, else: :black)}
-  #       }
-  #     end)
-
   def commit_move() do
-    {:ok, %{board: board, turn: turn}} = get_game_state()
-
-    {:ok, new_board} = Board.commit_turn(board, turn)
-    new_turn = %Turn{player: if(turn.player == :black, do: :white, else: :black)}
-
-    new_state = GenServer.call(__MODULE__, {:update_state, turn: new_turn, board: new_board})
-
-    {:ok, new_state}
+    update_state(fn %{turn: turn, board: board} ->
+      %{
+        board: Board.commit_turn(board, turn),
+        turn: %Turn{player: if(turn.player == :black, do: :white, else: :black)}
+      }
+    end)
   end
 
   defp update_state(updater_fn) do
     {:ok, old_state} = get_game_state()
-    updated_state = updater_fn.(old_state)
-    new_state = GenServer.call(__MODULE__, {:update_state, updated_state})
+    new_state = GenServer.call(__MODULE__, {:update_state, updater_fn.(old_state)})
     {:ok, new_state}
   end
-
 
   # server callbacks
 
