@@ -5,8 +5,10 @@ defmodule BgServer.Turn do
   def move_piece(turn = %__MODULE__{}, possible_move) do
     original_position = turn.pending_piece
 
-    # TODO: this is a circular dependency, should apply_dice live elsewhere?
-    dice_roll = BgServer.Board.apply_dice(original_position, possible_move, turn.player)
+    dice_roll =
+      if turn.player == :black,
+        do: original_position - possible_move,
+        else: possible_move - original_position
 
     %__MODULE__{
       turn
@@ -51,6 +53,7 @@ defmodule BgServer.Turn do
   end
 
   defp all_moves_for_roll({nil, nil}), do: []
+
   defp all_moves_for_roll({a, b}) do
     if a == b and a != nil, do: [a, a, a, a], else: [a, b]
   end

@@ -1,7 +1,7 @@
 defmodule BgServer.GameTest do
   use ExUnit.Case
 
-  alias BgServer.{Board,Game,Turn}
+  alias BgServer.{Board, Game, Turn}
 
   setup do
     %{game: start_supervised!(BgServer.Game)}
@@ -20,9 +20,10 @@ defmodule BgServer.GameTest do
     {:ok, game} = Game.roll_dice({2, 2})
     assert game.board == %Board{}
     assert game.turn.player == :black
-    assert game.turn.dice_roll == {2,2}
+    assert game.turn.dice_roll == {2, 2}
 
-    for _ <- 1..4, do: move_piece(6, 4) # move 4 black checkers from 6 to 4
+    # move 4 black checkers from 6 to 4
+    for _ <- 1..4, do: move_piece(6, 4)
 
     {:ok, game} = Game.commit_move()
 
@@ -36,7 +37,7 @@ defmodule BgServer.GameTest do
 
     {:ok, game} = Game.roll_dice({3, 5})
     assert game.turn.player == :white
-    assert game.turn.dice_roll == {3,5}
+    assert game.turn.dice_roll == {3, 5}
 
     move_piece(19, 22)
     move_piece(17, 22)
