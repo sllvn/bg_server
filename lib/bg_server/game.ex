@@ -33,8 +33,9 @@ defmodule BgServer.Game do
 
   def commit_move() do
     update_state(fn %{turn: turn, board: board} ->
+      {:ok, new_board} = Board.commit_turn(board, turn)
       %{
-        board: Board.commit_turn(board, turn),
+        board: new_board,
         turn: %Turn{player: if(turn.player == :black, do: :white, else: :black)}
       }
     end)

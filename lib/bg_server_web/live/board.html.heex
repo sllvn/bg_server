@@ -129,6 +129,6 @@
 <div class="flex mt-24">
   <div class="grow"></div>
   <div class="grow-0">
-    <button type="button" phx-click="reset_game" class="btn btn-gray">reset game</button>
+    <button type="button" phx-click="reset_game" class="btn btn-gray" disabled={@current_player == :white}>reset game</button>
   </div>
 </div>

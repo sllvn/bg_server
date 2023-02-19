@@ -30,8 +30,23 @@ defmodule BgServer.Board do
             bar: %{}
 
   def commit_turn(board = %__MODULE__{}, turn = %Turn{}) do
-    new_points = Enum.reduce(turn.pending_moves, board.points, &move_checker(&1, &2, turn))
-    %__MODULE__{board | points: new_points}
+    all_moves_valid =
+      turn.pending_moves
+      |> Enum.reduce(true, fn {dice_value, original_position}, all_valid ->
+        target_position =
+          if turn.player == :black,
+            do: original_position - dice_value,
+            else: original_position + dice_value
+
+        all_valid && is_valid_move(target_position, board.points, turn.player)
+      end)
+
+    if all_moves_valid do
+      new_points = Enum.reduce(turn.pending_moves, board.points, &move_checker(&1, &2, turn))
+      {:ok, %__MODULE__{board | points: new_points}}
+    else
+      {:error}
+    end
   end
 
   def move_checker({dice_value, original_position}, points, turn = %Turn{}) do
@@ -51,6 +66,7 @@ defmodule BgServer.Board do
   def apply_dice(position, dice_value, :white), do: position + dice_value
 
   def possible_moves(_board = %__MODULE__{}, %{pending_piece: nil}), do: []
+
   def possible_moves(board = %__MODULE__{}, turn = %Turn{}) do
     Turn.remaining_actions(turn)
     |> Enum.map(fn roll -> apply_dice(turn.pending_piece, roll, turn.player) end)
@@ -65,7 +81,7 @@ defmodule BgServer.Board do
       |> Map.get(candidate_position, %{})
       |> Map.get(opponent, 0)
 
-    opponent_pieces_at_position == 0
+    opponent_pieces_at_position <= 1
   end
 
   def pieces_at_position(board = %__MODULE__{}, turn = %Turn{}, position, color) do
