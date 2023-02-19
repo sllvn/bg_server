@@ -2,7 +2,7 @@ defmodule BgServer.Game do
   use GenServer
   alias BgServer.{Board, Turn}
 
-  @empty_game %{board: %Board{}, current_player: :black, turn: %Turn{}}
+  @empty_game %{board: %Board{}, turn: %Turn{}}
 
   defstruct [:id, state: @empty_game]
 

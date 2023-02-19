@@ -1,19 +1,16 @@
 defmodule BgServerWeb.Board do
   use BgServerWeb, :live_view
-  alias BgServer.{Board,Turn}
+  alias BgServer.{Board, Turn}
 
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
     game = BgServer.connect_to_game(:some_game_id)
     if connected?(socket), do: BgServer.subscribe()
 
-    %{board: board, current_player: current_player, turn: turn} = game
+    current_player = if params["player"] == "black", do: :black, else: :white
 
-    {:ok,
-     assign(socket,
-       board: board,
-       current_player: current_player,
-       turn: turn
-     )}
+    %{board: board, turn: turn} = game
+
+    {:ok, assign(socket, board: board, current_player: current_player, turn: turn)}
   end
 
   def handle_event("set_pending_piece", %{"position" => position}, socket) do
@@ -49,14 +46,9 @@ defmodule BgServerWeb.Board do
   end
 
   def handle_info({:new_game_state, new_game_state}, socket) do
-    %{board: board, current_player: current_player, turn: turn} = new_game_state
+    %{board: board, turn: turn} = new_game_state
 
-    {:noreply,
-     assign(socket,
-       board: board,
-       turn: turn,
-       current_player: current_player
-     )}
+    {:noreply, assign(socket, board: board, turn: turn)}
   end
 
   # view helpers
@@ -96,7 +88,11 @@ defmodule BgServerWeb.Board do
     pending_pieces =
       turn.pending_moves
       |> Enum.filter(fn {dice_value, original_position} ->
-        original_position - dice_value == position
+        if turn.player == :black do
+          original_position - dice_value == position
+        else
+          original_position + dice_value == position
+        end
       end)
       |> length
 

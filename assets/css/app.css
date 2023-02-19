@@ -14,7 +14,8 @@
 
 :root {
 	--white-active: #14B8A6;
-	--white-possible: #FEF08A;
+	--white-possible: #FEF08A; /* unused */
+	--white-pending: #701A75; /* unused */
 	--black-active: #14B8A6;
 	--black-possible: #FEF08A;
 	--black-pending: #701A75;

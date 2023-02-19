@@ -105,12 +105,11 @@
   </g>
 </svg>
 
-<div>
-  <%= @turn.player %>'s turn
-</div>
+<div>playing as <strong><%= @current_player %></strong></div>
+<div><%= @turn.player %>'s turn</div>
 <div class="flex mt-4 action-buttons">
   <div class="grow">
-    <button type="button" phx-click="roll_dice" disabled={!can_roll_dice(@turn.dice_roll)}>
+    <button type="button" phx-click="roll_dice" disabled={@turn.player != @current_player || !can_roll_dice(@turn.dice_roll)}>
       roll dice
     </button>
     <div class="inline-block ml-4 mr-4">
@@ -119,10 +118,10 @@
         <%= remaining_action %>
       </span>
     </div>
-    <button type="button" phx-click="undo_pending_move" disabled={length(@turn.pending_moves) < 1}>
+    <button type="button" phx-click="undo_pending_move" disabled={@turn.player != @current_player || length(@turn.pending_moves) < 1}>
       undo
     </button>
-    <button type="button" phx-click="commit_move" disabled={!Turn.is_complete(@turn)}>
+    <button type="button" phx-click="commit_move" disabled={@turn.player != @current_player || !Turn.is_complete(@turn)}>
       end move
     </button>
   </div>
