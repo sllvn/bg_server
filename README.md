@@ -16,3 +16,12 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
   * Docs: https://hexdocs.pm/phoenix
   * Forum: https://elixirforum.com/c/phoenix-forum
   * Source: https://github.com/phoenixframework/phoenix
+
+## TODO
+
+- [ ] hook up capturing pieces to board liveview
+- [ ] re-enter board from bar (must play pieces from bar before any other piece can move)
+- [ ] no possible moves
+- [ ] bearing off checkers
+- [ ] game-over detection
+- [ ] UX niceities (play sound when it's your turn)
