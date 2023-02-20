@@ -38,24 +38,35 @@ defmodule BgServer.Board do
       end)
 
     if all_moves_valid do
-      new_points = Enum.reduce(turn.pending_moves, board.points, &move_checker(&1, &2, turn))
-      {:ok, %__MODULE__{board | points: new_points}}
+      new_board = Enum.reduce(turn.pending_moves, board, &move_piece(&1, &2, turn))
+      {:ok, new_board}
     else
       {:error}
     end
   end
 
-  def move_checker({dice_value, original_position}, points, turn = %Turn{}) do
-    new_position = apply_dice(original_position, dice_value, turn.player)
-    current_position_count = Map.get(points, original_position) |> Map.get(turn.player)
-    new_position_count = Map.get(points, new_position, %{}) |> Map.get(turn.player, 0)
+  def move_piece({dice_value, original_position}, board, turn = %Turn{}) do
+    target_position = apply_dice(original_position, dice_value, turn.player)
+    current_position_count = Map.get(board.points, original_position) |> Map.get(turn.player)
+    new_position_count = Map.get(board.points, target_position, %{}) |> Map.get(turn.player, 0)
+    opponent = Turn.next_player(turn.player)
 
-    updates =
+    is_capturing = Map.get(board.points[target_position], opponent, 0) == 1
+    new_bar = if is_capturing do
+      Map.put(board.bar, opponent, Map.get(board.bar, opponent, 0) + 1)
+    else
+      board.bar
+    end
+
+    points_updates =
       %{}
       |> Map.put(original_position, Map.put(%{}, turn.player, current_position_count - 1))
-      |> Map.put(new_position, Map.put(%{}, turn.player, new_position_count + 1))
+      |> Map.put(target_position, Map.put(%{}, turn.player, new_position_count + 1))
 
-    Map.merge(points, updates)
+    %__MODULE__{
+      points: Map.merge(board.points, points_updates),
+      bar: new_bar
+    }
   end
 
   def apply_dice(position, dice_value, :black), do: position - dice_value

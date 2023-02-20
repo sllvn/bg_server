@@ -78,9 +78,19 @@ defmodule BgServer.BoardTest do
 
       assert new_board.points[4] == %{white: 1}
       assert new_board.points[6] == %{white: 1}
+      assert new_board.bar == %{black: 1}
     end
 
-    @tag :wip
+    test "properly handles capture of more than 1 piece" do
+      board = %Board{points: %{%Board{}.points | 6 => %{black: 1}, 4 => %{black: 1}}, bar: %{black: 1}}
+      turn = %Turn{pending_moves: [{5, 1}, {3, 1}], player: :white}
+      {:ok, new_board} = Board.commit_turn(board, turn)
+
+      assert new_board.points[4] == %{white: 1}
+      assert new_board.points[6] == %{white: 1}
+      assert new_board.bar == %{black: 3}
+    end
+
     test "does not allow capturing doubled up opponent pieces" do
       board = %Board{points: %{%Board{}.points | 6 => %{black: 2}}}
       turn = %Turn{pending_moves: [{5, 1}, {3, 1}], player: :white}
