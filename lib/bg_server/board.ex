@@ -33,11 +33,7 @@ defmodule BgServer.Board do
     all_moves_valid =
       turn.pending_moves
       |> Enum.reduce(true, fn {dice_value, original_position}, all_valid ->
-        target_position =
-          if turn.player == :black,
-            do: original_position - dice_value,
-            else: original_position + dice_value
-
+        target_position = apply_dice(original_position, dice_value, turn.player)
         all_valid && is_valid_move(target_position, board.points, turn.player)
       end)
 
@@ -74,7 +70,7 @@ defmodule BgServer.Board do
   end
 
   defp is_valid_move(candidate_position, points, current_player) do
-    opponent = if current_player == :black, do: :white, else: :black
+    opponent = Turn.next_player(current_player)
 
     opponent_pieces_at_position =
       points

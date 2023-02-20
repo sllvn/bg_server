@@ -88,11 +88,7 @@ defmodule BgServerWeb.Board do
     pending_pieces =
       turn.pending_moves
       |> Enum.filter(fn {dice_value, original_position} ->
-        if turn.player == :black do
-          original_position - dice_value == position
-        else
-          original_position + dice_value == position
-        end
+        position == Board.apply_dice(original_position, dice_value, turn.player)
       end)
       |> length
 

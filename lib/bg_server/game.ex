@@ -36,7 +36,7 @@ defmodule BgServer.Game do
       {:ok, new_board} = Board.commit_turn(board, turn)
       %{
         board: new_board,
-        turn: %Turn{player: if(turn.player == :black, do: :white, else: :black)}
+        turn: %Turn{player: Turn.next_player(turn.player)}
       }
     end)
   end
