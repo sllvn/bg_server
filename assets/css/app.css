@@ -13,9 +13,11 @@
 .light { fill: #ddd; }
 
 :root {
+	--white: #fff;
 	--white-active: #14B8A6;
 	--white-possible: #FEF08A; /* unused */
 	--white-pending: #701A75; /* unused */
+	--black: #111;
 	--black-active: #14B8A6;
 	--black-possible: #FEF08A;
 	--black-pending: #701A75;
@@ -24,17 +26,17 @@
 .action-buttons { @apply flex mt-4; }
 	.action-buttons button[type=button] { @apply btn btn-gray; }
 
-g.white circle { fill: #fff; stroke: #111; }
+g.white circle { fill: var(--white); stroke: #111; }
 	[data-current-player="white"][data-turn="white"] g.white circle.active { fill: var(--white-active); }
-	[data-current-player="white"][data-turn="white"] g.white circle.final:hover { fill: var(--white-active); }
-g.black circle { fill: #111; stroke: #999; }
+	[data-current-player="white"][data-turn="white"][data-ready] g.white circle.final:hover { fill: var(--white-active); }
+g.black circle { fill: var(--black); stroke: #999; }
 	[data-current-player="black"][data-turn="black"] g.black circle.active { fill: var(--black-active); }
-	[data-current-player="black"][data-turn="black"] g.black circle.final:hover { fill: var(--black-active); }
+	[data-current-player="black"][data-turn="black"][data-ready] g.black circle.final:hover { fill: var(--black-active); }
 g.possible-moves circle { fill: var(--black-possible); cursor: pointer; }
 g.pending-moves circle { fill: var(--black-pending); cursor: pointer; }
 
-[data-current-player="white"][data-turn="white"] g.white .final,
-[data-current-player="black"][data-turn="black"] g.black .final { cursor: pointer; }
+[data-current-player="white"][data-turn="white"][data-ready] g.white .final,
+[data-current-player="black"][data-turn="black"][data-ready] g.black .final { cursor: pointer; }
 
 .dice-value {
 	font-size: 36px;

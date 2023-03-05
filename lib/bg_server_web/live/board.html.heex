@@ -3,6 +3,7 @@
   viewBox="0 0 1250 800"
   data-current-player={@current_player}
   data-turn={@turn.player}
+  data-ready={are_dice_rolled(@turn)}
 >
   <rect x="0" y="0" width="100%" height="100%" fill="#aaa"></rect>
   <rect x="600" y="0" width="50" height="100%" fill="#888"></rect>
@@ -17,26 +18,26 @@
     </g>
     <g>
       <polygon class="light" points="650,0  700,325  750,0"></polygon>
-      <polygon class="dark" points="750,0  800,325  850,0"></polygon>
+      <polygon class="dark"  points="750,0  800,325  850,0"></polygon>
       <polygon class="light" points="850,0  900,325  950,0"></polygon>
-      <polygon class="dark" points="950,0  1000,325 1050,0"></polygon>
+      <polygon class="dark"  points="950,0  1000,325 1050,0"></polygon>
       <polygon class="light" points="1050,0 1100,325 1150,0"></polygon>
-      <polygon class="dark" points="1150,0 1200,325 1250,0"></polygon>
+      <polygon class="dark"  points="1150,0 1200,325 1250,0"></polygon>
     </g>
     <g>
-      <polygon class="dark" points="650,800  700,475  750,800"></polygon>
+      <polygon class="dark"  points="650,800  700,475  750,800"></polygon>
       <polygon class="light" points="750,800  800,475  850,800"></polygon>
-      <polygon class="dark" points="850,800  900,475  950,800"></polygon>
+      <polygon class="dark"  points="850,800  900,475  950,800"></polygon>
       <polygon class="light" points="950,800  1000,475 1050,800"></polygon>
-      <polygon class="dark" points="1050,800 1100,475 1150,800"></polygon>
+      <polygon class="dark"  points="1050,800 1100,475 1150,800"></polygon>
       <polygon class="light" points="1150,800 1200,475 1250,800"></polygon>
     </g>
     <g>
-      <polygon class="dark" points="0,800   50,475  100,800"></polygon>
+      <polygon class="dark"  points="0,800   50,475  100,800"></polygon>
       <polygon class="light" points="100,800 150,475 200,800"></polygon>
-      <polygon class="dark" points="200,800 250,475 300,800"></polygon>
+      <polygon class="dark"  points="200,800 250,475 300,800"></polygon>
       <polygon class="light" points="300,800 350,475 400,800"></polygon>
-      <polygon class="dark" points="400,800 450,475 500,800"></polygon>
+      <polygon class="dark"  points="400,800 450,475 500,800"></polygon>
       <polygon class="light" points="500,800 550,475 600,800"></polygon>
     </g>
   </g>
@@ -66,6 +67,15 @@
         <% end %>
       <% end %>
     </g>
+    <g class="bar">
+      <g :for={color <- [:white, :black]} class={color}>
+        <%= for index <- 1..Map.get(@board.bar, color, 0) do %>
+          <circle r="35" cx="625" cy={cy_for_bar_piece(index, color, @board)} />
+          <%= if color == @turn.player do %>
+          <% end %>
+        <% end %>
+      </g>
+    </g>
     <g class="pending-moves">
       <%= for {position, pending_moves} <- grouped_pending_moves(@board, @turn) do %>
         <circle
@@ -92,7 +102,7 @@
       </circle>
     </g>
   </g>
-  <g :if={elem(@turn.dice_roll, 0) != nil}>
+  <g :if={are_dice_rolled(@turn)}>
     <rect x="880" y="370" width="60" height="60" fill="#fff" stroke="0"></rect>
     <rect x="960" y="370" width="60" height="60" fill="#fff" stroke="0"></rect>
 

@@ -29,15 +29,17 @@ defmodule BgServer.Board do
             },
             bar: %{}
 
+  # TODO: is_turn_valid should live on turn?
   def commit_turn(board = %__MODULE__{}, turn = %Turn{}) do
-    all_moves_valid =
+    # if any piece is left on the bar, and any of the moves were not bar -> board, the turn is invalid
+    is_turn_valid =
       turn.pending_moves
       |> Enum.reduce(true, fn {dice_value, original_position}, all_valid ->
         target_position = apply_dice(original_position, dice_value, turn.player)
         all_valid && is_valid_move(target_position, board.points, turn.player)
       end)
 
-    if all_moves_valid do
+    if is_turn_valid do
       new_board = Enum.reduce(turn.pending_moves, board, &move_piece(&1, &2, turn))
       {:ok, new_board}
     else

@@ -8,14 +8,18 @@ defmodule BgServerWeb.Board do
 
     current_player = if params["player"] == "black", do: :black, else: :white
 
-    %{board: board, turn: turn} = game
+    %{board: board, turn: turn} = game |> dbg
 
     {:ok, assign(socket, board: board, current_player: current_player, turn: turn)}
   end
 
   def handle_event("set_pending_piece", %{"position" => position}, socket) do
     click_position = String.to_integer(position)
-    BgServer.set_pending_piece(click_position)
+
+    if are_dice_rolled(socket.assigns.turn) do
+      BgServer.set_pending_piece(click_position)
+    end
+
     {:noreply, socket}
   end
 
@@ -64,6 +68,16 @@ defmodule BgServerWeb.Board do
     bar_offset = if position <= 6 or position >= 19, do: 0, else: 50
 
     base + bar_offset
+  end
+
+  defp cy_for_bar_piece(index, color, _board) do
+    # TODO: NEXT: does board even need to be passed in here?
+    # TODO: NEXT: wire up clicking on these pieces
+    if color == :black do
+      340 - (index-1) * 75
+    else
+      460 + (index-1) * 75
+    end
   end
 
   defp cy_for_position(position, index) do
@@ -137,4 +151,6 @@ defmodule BgServerWeb.Board do
   # business logic
 
   defp can_roll_dice(dice_roll), do: elem(dice_roll, 0) == nil
+
+  defp are_dice_rolled(turn = %Turn{}), do: !can_roll_dice(turn.dice_roll)
 end

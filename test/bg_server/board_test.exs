@@ -97,7 +97,4 @@ defmodule BgServer.BoardTest do
       assert {:error} = Board.commit_turn(board, turn)
     end
   end
-
-  describe "move_piece" do
-  end
 end
