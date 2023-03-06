@@ -29,6 +29,14 @@ defmodule BgServerWeb.Board do
     {:noreply, socket}
   end
 
+  def handle_event("set_pending_bar_piece", _params, socket) do
+    if are_dice_rolled(socket.assigns.turn) do
+      BgServer.set_pending_piece(:bar)
+    end
+
+    {:noreply, socket}
+  end
+
   def handle_event("reset_game", _value, socket) do
     BgServer.reset_game()
     {:noreply, socket}
@@ -70,15 +78,8 @@ defmodule BgServerWeb.Board do
     base + bar_offset
   end
 
-  defp cy_for_bar_piece(index, color, _board) do
-    # TODO: NEXT: does board even need to be passed in here?
-    # TODO: NEXT: wire up clicking on these pieces
-    if color == :black do
-      340 - (index-1) * 75
-    else
-      460 + (index-1) * 75
-    end
-  end
+  defp cy_for_bar_piece(index, :black), do: 340 - (index-1) * 75
+  defp cy_for_bar_piece(index, :white), do: 460 + (index-1) * 75
 
   defp cy_for_position(position, index) do
     if position <= 12 do

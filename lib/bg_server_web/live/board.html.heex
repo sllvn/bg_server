@@ -70,8 +70,19 @@
     <g class="bar">
       <g :for={color <- [:white, :black]} class={color}>
         <%= for index <- 1..Map.get(@board.bar, color, 0) do %>
-          <circle r="35" cx="625" cy={cy_for_bar_piece(index, color, @board)} />
           <%= if color == @turn.player do %>
+            <circle
+              r="35"
+              cx="625"
+              cy={cy_for_bar_piece(index, color)}
+              phx-click="set_pending_bar_piece"
+            />
+          <% else %>
+            <circle
+              r="35"
+              cx="625"
+              cy={cy_for_bar_piece(index, color)}
+            />
           <% end %>
         <% end %>
       </g>

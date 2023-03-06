@@ -75,6 +75,15 @@ defmodule BgServer.Board do
   def apply_dice(position, dice_value, :white), do: position + dice_value
 
   def possible_moves(_board = %__MODULE__{}, %{pending_piece: nil}), do: []
+  def possible_moves(_board = %__MODULE__{}, %{pending_piece: :bar, dice_roll: dice_roll, player: player}) do
+    # TODO: NEXT: finish this + wire up rendering the pending bar piece
+    {a, b} = dice_roll
+    if player == :white do
+      [25-a, 25-b]
+    else
+      [a, b]
+    end
+  end
 
   def possible_moves(board = %__MODULE__{}, turn = %Turn{}) do
     Turn.remaining_actions(turn)
