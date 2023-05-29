@@ -2,30 +2,30 @@ defmodule BgServer.Board do
   alias BgServer.Turn
 
   defstruct points: %{
-              1 => %{white: 2},
-              2 => %{},
-              3 => %{},
-              4 => %{},
-              5 => %{},
-              6 => %{black: 5},
-              7 => %{},
-              8 => %{black: 3},
-              9 => %{},
-              10 => %{},
-              11 => %{},
-              12 => %{white: 5},
-              13 => %{black: 5},
-              14 => %{},
-              15 => %{},
-              16 => %{},
-              17 => %{white: 3},
-              18 => %{},
-              19 => %{white: 5},
-              20 => %{},
-              21 => %{},
-              22 => %{},
-              23 => %{},
-              24 => %{black: 2}
+              1 => {:white, 2},
+              2 => nil,
+              3 => nil,
+              4 => nil,
+              5 => nil,
+              6 => {:black, 5},
+              7 => nil,
+              8 => {:black, 3},
+              9 => nil,
+              10 => nil,
+              11 => nil,
+              12 => {:white, 5},
+              13 => {:black, 5},
+              14 => nil,
+              15 => nil,
+              16 => nil,
+              17 => {:white, 3},
+              18 => nil,
+              19 => {:white, 5},
+              20 => nil,
+              21 => nil,
+              22 => nil,
+              23 => nil,
+              24 => {:black, 2}
             },
             bar: %{}
 
@@ -49,21 +49,27 @@ defmodule BgServer.Board do
 
   def move_piece({dice_value, original_position}, board, turn = %Turn{}) do
     target_position = apply_dice(original_position, dice_value, turn.player)
-    current_position_count = Map.get(board.points, original_position) |> Map.get(turn.player)
-    new_position_count = Map.get(board.points, target_position, %{}) |> Map.get(turn.player, 0)
+
+    current_position_count = num_pieces_at(board.points, original_position, turn.player)
+    new_position_count = num_pieces_at(board.points, target_position, turn.player)
+
     opponent = Turn.next_player(turn.player)
 
-    is_capturing = Map.get(board.points[target_position], opponent, 0) == 1
-    new_bar = if is_capturing do
-      Map.put(board.bar, opponent, Map.get(board.bar, opponent, 0) + 1)
-    else
-      board.bar
-    end
+    is_capturing = num_pieces_at(board.points, target_position, opponent) == 1
+
+    new_bar =
+      if is_capturing do
+        board.bar |> Map.put(opponent, Map.get(board.bar, opponent, 0) + 1)
+      else
+        board.bar
+      end
 
     points_updates =
       %{}
-      |> Map.put(original_position, Map.put(%{}, turn.player, current_position_count - 1))
-      |> Map.put(target_position, Map.put(%{}, turn.player, new_position_count + 1))
+      |> Map.put(original_position, {turn.player, current_position_count - 1})
+      |> Map.put(target_position, {turn.player, new_position_count + 1})
+      |> Enum.map(fn {k, v} -> if v == 0, do: nil, else: {k, v} end) # clean out points with 0s
+      |> Enum.into(%{})
 
     %__MODULE__{
       points: Map.merge(board.points, points_updates),
@@ -71,15 +77,29 @@ defmodule BgServer.Board do
     }
   end
 
+  def num_pieces_at(points = %{}, position, player) do
+    case Map.get(points, position) do
+      {^player, count} -> count
+      _ -> 0
+    end
+  end
+
   def apply_dice(position, dice_value, :black), do: position - dice_value
   def apply_dice(position, dice_value, :white), do: position + dice_value
 
   def possible_moves(_board = %__MODULE__{}, %{pending_piece: nil}), do: []
-  def possible_moves(_board = %__MODULE__{}, %{pending_piece: :bar, dice_roll: dice_roll, player: player}) do
+
+  def possible_moves(_board = %__MODULE__{}, %{
+        pending_piece: :bar,
+        dice_roll: dice_roll,
+        player: player
+      }) do
     # TODO: NEXT: finish this + wire up rendering the pending bar piece
+    # TODO: wire up moving piece from bar
     {a, b} = dice_roll
+
     if player == :white do
-      [25-a, 25-b]
+      [25 - a, 25 - b]
     else
       [a, b]
     end
@@ -93,12 +113,7 @@ defmodule BgServer.Board do
 
   defp is_valid_move(candidate_position, points, current_player) do
     opponent = Turn.next_player(current_player)
-
-    opponent_pieces_at_position =
-      points
-      |> Map.get(candidate_position, %{})
-      |> Map.get(opponent, 0)
-
+    opponent_pieces_at_position = num_pieces_at(points, candidate_position, opponent)
     opponent_pieces_at_position <= 1
   end
 
@@ -109,10 +124,7 @@ defmodule BgServer.Board do
       |> Enum.filter(fn move -> elem(move, 1) == position end)
       |> Enum.count()
 
-    points_at_position =
-      board.points
-      |> Map.get(position, %{})
-      |> Map.get(color, 0)
+    points_at_position = num_pieces_at(board.points, position, color)
 
     points_at_position - moved_from_position
   end

@@ -27,8 +27,8 @@ defmodule BgServer.GameTest do
 
     {:ok, game} = Game.commit_move()
 
-    assert game.board.points[4] == %{black: 4}
-    assert game.board.points[6] == %{black: 1}
+    assert game.board.points[4] == {:black, 4}
+    assert game.board.points[6] == {:black, 1}
     assert game.turn.player == :white
 
     # white's turn
@@ -44,9 +44,9 @@ defmodule BgServer.GameTest do
 
     {:ok, game} = Game.commit_move()
 
-    assert game.board.points[19] == %{white: 4}
-    assert game.board.points[17] == %{white: 2}
-    assert game.board.points[22] == %{white: 2}
+    assert game.board.points[19] == {:white, 4}
+    assert game.board.points[17] == {:white, 2}
+    assert game.board.points[22] == {:white, 2}
     assert game.turn.player == :black
   end
 

@@ -68,7 +68,7 @@
       <% end %>
     </g>
     <g class="bar">
-      <g :for={color <- [:white, :black]} class={color}>
+      <g :for={color <- [:white, :black]} class={color} :if={Map.get(@board.bar, color, 0) > 0}>
         <%= for index <- 1..Map.get(@board.bar, color, 0) do %>
           <%= if color == @turn.player do %>
             <circle

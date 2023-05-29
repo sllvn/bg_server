@@ -89,11 +89,8 @@ defmodule BgServerWeb.Board do
     end
   end
 
-  defp cy_for_position(position, board, turn, :include_pending) do
-    current_pieces =
-      board
-      |> Map.get(position, %{})
-      |> Map.get(turn.player, 0)
+  defp cy_for_position(position, points, turn, :include_pending) do
+    current_pieces = Board.num_pieces_at(points, position, turn.player)
 
     moved_pieces =
       turn.pending_moves
@@ -110,7 +107,7 @@ defmodule BgServerWeb.Board do
     cy_for_position(position, current_pieces + pending_pieces + 1 - moved_pieces)
   end
 
-  defp cy_for_position(position, board, turn, index) do
+  defp cy_for_position(position, points, turn, index) do
     # {position, board, turn.pending_moves, index} |> IO.inspect(label: "cy_for_position/3")
 
     moved_pieces =
@@ -118,10 +115,7 @@ defmodule BgServerWeb.Board do
       |> Enum.filter(fn {_dice_value, original_position} -> original_position == position end)
       |> length
 
-    current_pieces =
-      board
-      |> Map.get(position, %{})
-      |> Map.get(turn.player, 0)
+    current_pieces = Board.num_pieces_at(points, position, turn.player)
 
     cy_for_position(position, current_pieces + 1 + index - moved_pieces)
   end
