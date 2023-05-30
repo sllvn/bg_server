@@ -97,4 +97,27 @@ defmodule BgServer.BoardTest do
       assert {:error} = Board.commit_turn(board, turn)
     end
   end
+
+  describe "commit_turn (bar scenarios)" do
+    test "moves pieces from bar" do
+      board = %Board{bar: %{black: 1}}
+      turn = %Turn{pending_moves: [{3, :bar}, {4, 24}], player: :black, dice_roll: {3,4}}
+      {:ok, new_board} = Board.commit_turn(board, turn)
+
+      assert new_board.bar == %{}
+      assert new_board.points[24] == {:black, 1}
+      assert new_board.points[22] == {:black, 1} # barred piece, used 3
+      assert new_board.points[20] == {:black, 1}
+    end
+
+    test "requires moving pieces from the bar before any other pieces" do
+      board = %Board{bar: %{black: 1}}
+
+      turn = %Turn{pending_moves: [{3, 24}, {4, 24}], player: :black, dice_roll: {3,4}}
+      assert {:error} = Board.commit_turn(board, turn)
+    end
+  end
+
+  describe "commit_turn (no valid moves)" do
+  end
 end

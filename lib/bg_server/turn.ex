@@ -18,6 +18,8 @@ defmodule BgServer.Turn do
   end
 
   # TODO: similar to Board.apply_dice/3, where should these helpers live?
+  def calculate_distance(:bar, end_pos, :black), do: 25 - end_pos
+  def calculate_distance(:bar, end_pos, :white), do: end_pos
   def calculate_distance(start_pos, end_pos, :black), do: start_pos - end_pos
   def calculate_distance(start_pos, end_pos, :white), do: end_pos - start_pos
 
@@ -55,9 +57,7 @@ defmodule BgServer.Turn do
     length(remaining_actions(turn)) == 0
   end
 
-  defp all_moves_for_roll({nil, nil}), do: []
-
-  defp all_moves_for_roll({a, b}) do
-    if a == b and a != nil, do: [a, a, a, a], else: [a, b]
-  end
+  def all_moves_for_roll({nil, nil}), do: []
+  def all_moves_for_roll({a, a}), do: [a, a, a, a]
+  def all_moves_for_roll({a, b}), do: [a, b]
 end

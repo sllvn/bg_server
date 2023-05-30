@@ -8,7 +8,7 @@ defmodule BgServerWeb.Board do
 
     current_player = if params["player"] == "black", do: :black, else: :white
 
-    %{board: board, turn: turn} = game |> dbg
+    %{board: board, turn: turn} = game
 
     {:ok, assign(socket, board: board, current_player: current_player, turn: turn)}
   end

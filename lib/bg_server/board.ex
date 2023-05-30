@@ -29,22 +29,29 @@ defmodule BgServer.Board do
             },
             bar: %{}
 
-  # TODO: is_turn_valid should live on turn?
   def commit_turn(board = %__MODULE__{}, turn = %Turn{}) do
-    # if any piece is left on the bar, and any of the moves were not bar -> board, the turn is invalid
-    is_turn_valid =
+    if is_turn_valid(board, turn) do
+      new_board = Enum.reduce(turn.pending_moves, board, &move_piece(&1, &2, turn))
+      {:ok, new_board}
+    else
+      {:error}
+    end
+  end
+
+  def is_turn_valid(board = %__MODULE__{}, turn = %Turn{}) do
+    # TODO: should this live in Turn module?
+    pending_moves_valid =
       turn.pending_moves
       |> Enum.reduce(true, fn {dice_value, original_position}, all_valid ->
         target_position = apply_dice(original_position, dice_value, turn.player)
         all_valid && is_valid_move(target_position, board.points, turn.player)
       end)
 
-    if is_turn_valid do
-      new_board = Enum.reduce(turn.pending_moves, board, &move_piece(&1, &2, turn))
-      {:ok, new_board}
-    else
-      {:error}
-    end
+    required_bar_moves = min(length(Turn.all_moves_for_roll(turn.dice_roll)), board.bar[turn.player] || 0)
+    bar_moves = Enum.count(turn.pending_moves, fn {_dice_roll, original_position} -> original_position == :bar end)
+    did_exhaust_bar_moves = required_bar_moves == bar_moves
+
+    pending_moves_valid && did_exhaust_bar_moves
   end
 
   def move_piece({dice_value, original_position}, board, turn = %Turn{}) do
@@ -57,23 +64,35 @@ defmodule BgServer.Board do
 
     is_capturing = num_pieces_at(board.points, target_position, opponent) == 1
 
-    new_bar =
-      if is_capturing do
-        board.bar |> Map.put(opponent, Map.get(board.bar, opponent, 0) + 1)
-      else
-        board.bar
-      end
+    bar_updates =
+      board.bar
+      |> then(fn bar ->
+        if is_capturing do
+          bar |> Map.put(opponent, Map.get(bar, opponent, 0) + 1)
+        else
+          bar
+        end
+      end)
+      |> then(fn bar ->
+        if original_position == :bar do
+          Map.put(bar, turn.player, Map.get(bar, turn.player, 0) - 1)
+        else
+          bar
+        end
+      end)
+      |> Enum.filter(fn {_k, v} -> v > 0 end) |> Enum.into(%{})
 
     points_updates =
       %{}
       |> Map.put(original_position, {turn.player, current_position_count - 1})
       |> Map.put(target_position, {turn.player, new_position_count + 1})
       |> Enum.map(fn {k, v} -> if v == 0, do: nil, else: {k, v} end) # clean out points with 0s
+      |> Enum.filter(fn {k, _v} -> k != :bar end) # clean out nonsensical things like :bar => {:black, -1}
       |> Enum.into(%{})
 
     %__MODULE__{
       points: Map.merge(board.points, points_updates),
-      bar: new_bar
+      bar: bar_updates
     }
   end
 
@@ -84,26 +103,12 @@ defmodule BgServer.Board do
     end
   end
 
+  def apply_dice(:bar, dice_value, :black), do: 25 - dice_value
+  def apply_dice(:bar, dice_value, :white), do: dice_value
   def apply_dice(position, dice_value, :black), do: position - dice_value
   def apply_dice(position, dice_value, :white), do: position + dice_value
 
   def possible_moves(_board = %__MODULE__{}, %{pending_piece: nil}), do: []
-
-  def possible_moves(_board = %__MODULE__{}, %{
-        pending_piece: :bar,
-        dice_roll: dice_roll,
-        player: player
-      }) do
-    # TODO: NEXT: finish this + wire up rendering the pending bar piece
-    # TODO: wire up moving piece from bar
-    {a, b} = dice_roll
-
-    if player == :white do
-      [25 - a, 25 - b]
-    else
-      [a, b]
-    end
-  end
 
   def possible_moves(board = %__MODULE__{}, turn = %Turn{}) do
     Turn.remaining_actions(turn)
