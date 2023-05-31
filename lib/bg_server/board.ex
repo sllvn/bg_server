@@ -30,28 +30,11 @@ defmodule BgServer.Board do
             bar: %{}
 
   def commit_turn(board = %__MODULE__{}, turn = %Turn{}) do
-    if is_turn_valid(board, turn) do
-      new_board = Enum.reduce(turn.pending_moves, board, &move_piece(&1, &2, turn))
-      {:ok, new_board}
+    with {:ok, turn} <- Turn.validate(turn, board) do
+      {:ok, Enum.reduce(turn.pending_moves, board, &move_piece(&1, &2, turn))}
     else
-      {:error}
+      error -> error
     end
-  end
-
-  def is_turn_valid(board = %__MODULE__{}, turn = %Turn{}) do
-    # TODO: should this live in Turn module?
-    pending_moves_valid =
-      turn.pending_moves
-      |> Enum.reduce(true, fn {dice_value, original_position}, all_valid ->
-        target_position = apply_dice(original_position, dice_value, turn.player)
-        all_valid && is_valid_move(target_position, board.points, turn.player)
-      end)
-
-    required_bar_moves = min(length(Turn.all_moves_for_roll(turn.dice_roll)), board.bar[turn.player] || 0)
-    bar_moves = Enum.count(turn.pending_moves, fn {_dice_roll, original_position} -> original_position == :bar end)
-    did_exhaust_bar_moves = required_bar_moves == bar_moves
-
-    pending_moves_valid && did_exhaust_bar_moves
   end
 
   def move_piece({dice_value, original_position}, board, turn = %Turn{}) do
@@ -116,7 +99,7 @@ defmodule BgServer.Board do
     |> Enum.filter(fn c -> is_valid_move(c, board.points, turn.player) end)
   end
 
-  defp is_valid_move(candidate_position, points, current_player) do
+  def is_valid_move(candidate_position, points, current_player) do
     opponent = Turn.next_player(current_player)
     opponent_pieces_at_position = num_pieces_at(points, candidate_position, opponent)
     opponent_pieces_at_position <= 1

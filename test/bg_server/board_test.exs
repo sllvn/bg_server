@@ -94,7 +94,7 @@ defmodule BgServer.BoardTest do
     test "does not allow capturing doubled up opponent pieces" do
       board = %Board{points: %{%Board{}.points | 6 => {:black, 2}}}
       turn = %Turn{pending_moves: [{5, 1}, {3, 1}], player: :white}
-      assert {:error} = Board.commit_turn(board, turn)
+      assert {:error, {:reason, :invalid_pending_moves}} = Board.commit_turn(board, turn)
     end
   end
 
@@ -114,7 +114,7 @@ defmodule BgServer.BoardTest do
       board = %Board{bar: %{black: 1}}
 
       turn = %Turn{pending_moves: [{3, 24}, {4, 24}], player: :black, dice_roll: {3,4}}
-      assert {:error} = Board.commit_turn(board, turn)
+      assert {:error, {:reason, :pieces_left_on_bar}} = Board.commit_turn(board, turn)
     end
   end
 

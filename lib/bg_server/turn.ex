@@ -1,4 +1,6 @@
 defmodule BgServer.Turn do
+  alias BgServer.Board
+
   # pending_moves is a list of {dice_roll, start_position} tuples
   defstruct player: :black, pending_piece: nil, dice_roll: {nil, nil}, pending_moves: []
 
@@ -60,4 +62,24 @@ defmodule BgServer.Turn do
   def all_moves_for_roll({nil, nil}), do: []
   def all_moves_for_roll({a, a}), do: [a, a, a, a]
   def all_moves_for_roll({a, b}), do: [a, b]
+
+  def validate(turn = %__MODULE__{}, board = %Board{}) do
+    pending_moves_valid =
+      turn.pending_moves
+      |> Enum.reduce(true, fn {dice_value, original_position}, all_valid ->
+        target_position = Board.apply_dice(original_position, dice_value, turn.player)
+        all_valid && Board.is_valid_move(target_position, board.points, turn.player)
+      end)
+
+    required_bar_moves = min(length(all_moves_for_roll(turn.dice_roll)), board.bar[turn.player] || 0)
+    bar_moves = Enum.count(turn.pending_moves, fn {_dice_roll, original_position} -> original_position == :bar end)
+    did_exhaust_bar_moves = required_bar_moves == bar_moves
+
+    case {pending_moves_valid, did_exhaust_bar_moves} do
+      {false, _} -> {:error, {:reason, :invalid_pending_moves}}
+      {_, false} -> {:error, {:reason, :pieces_left_on_bar}}
+      {true, true} -> {:ok, turn}
+    end
+  end
+
 end
